@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Data Explorer - Data Science in Industry</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        industry: { red: '#dc2626', amber: '#f59e0b', cyan: '#06b6d4', dark: '#0a0f1a' }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #0f172a; /* Slate 900 for light mode */
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(220, 38, 38, 0.05), transparent 25%);
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .glow-cyan {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+            border-color: rgba(6, 182, 212, 0.5);
+        }
+
+        .glow-red {
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
+            border-color: rgba(220, 38, 38, 0.5);
+        }
+
+        .glow-amber {
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+            border-color: rgba(245, 158, 11, 0.5);
+        }
+
+        /* Module 1 Animations */
+        @keyframes scrollRaw {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(-50%);
+            }
+        }
+
+        .raw-noise-container {
+            overflow: hidden;
+            position: relative;
+            height: 200px;
+        }
+
+        .raw-noise-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            animation: scrollRaw 10s linear infinite;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        /* Module 2 Lifecycle */
+        .step-item {
+            z-index: 10;
+        }
+
+        .step-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .step-circle:hover,
+        .step-item.active .step-circle {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: #06b6d4;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+            color: #06b6d4;
+        }
+
+        @keyframes stepGlow {
+
+            0%,
+            20%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0px rgba(6, 182, 212, 0);
+                border-color: #e2e8f0;
+                color: inherit;
+            }
+
+            5% {
+                transform: scale(1.15);
+                box-shadow: 0 0 25px rgba(6, 182, 212, 0.8);
+                border-color: #06b6d4;
+                background: rgba(6, 182, 212, 0.2);
+                color: #06b6d4;
+            }
+        }
+
+        .pulse-step {
+            animation: stepGlow 8s infinite;
+        }
+
+        /* Module 3 Tank */
+        .tank {
+            width: 100px;
+            height: 200px;
+            border: 4px solid #cbd5e1;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .tank-level {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            transition: height 1s ease-in-out;
+        }
+
+        .tank-water {
+            background: rgba(6, 182, 212, 0.7);
+            height: 30%;
+            z-index: 3;
+        }
+
+        .tank-product {
+            background: rgba(30, 41, 59, 0.9);
+            border-top: 2px solid #f59e0b;
+            height: 70%;
+            z-index: 2;
+        }
+
+        /* Custom Scrollbar for Terminals */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Toggle Switch */
+        .toggle-checkbox:checked+.toggle-label {
+            background-color: #06b6d4;
+        }
+
+        .toggle-checkbox:checked {
+            border-color: #06b6d4;
+        }
+
+        .toggle-checkbox {
+            transition: transform 0.3s ease-in-out, border-color 0.3s ease-in-out;
+        }
+
+        .toggle-w12:checked {
+            transform: translateX(20px);
+        }
+
+        .toggle-w10:checked {
+            transform: translateX(16px);
+        }
+
+
+        /* Dark Mode Overrides */
+        .dark body {
+            background-color: #0a0f1a;
+            color: #ffffff; /* Pure white for dark mode */
+        }
+
+        .dark .glass {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .dark .step-circle {
+            background: #1e293b;
+            border: 2px solid #475569;
+        }
+
+        .dark .step-circle:hover,
+        .dark .step-item.active .step-circle {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: #06b6d4;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+            color: #06b6d4;
+        }
+
+        .dark .tank {
+            border: 4px solid #475569;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .dark ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+
+<body class="p-4 md:p-8">
+
+    <div class="fixed top-4 right-4 z-50">
+        <button id="theme-toggle"
+            class="p-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+            <i data-lucide="moon" id="theme-icon-dark" class="w-5 h-5 hidden"></i>
+            <i data-lucide="sun" id="theme-icon-light" class="w-5 h-5 hidden"></i>
+        </button>
+    </div>
+
+    <header class="mb-12 text-center">
+        <div class="inline-flex items-center justify-center space-x-3 mb-4">
+            <i data-lucide="database" class="w-8 h-8 text-white"></i>
+            <h1 class="text-4xl font-bold tracking-wider text-white">Industry Data Explorer</h1>
+        </div>
+        <p class="text-slate-300 max-w-2xl mx-auto">Digital Industrial Command Center: Bridging physics-based engineering and predictive mathematics.</p>
+    </header>
+
+    <div class="max-w-7xl mx-auto space-y-12">
+
+        <!-- MODULE 1: What is Data Science? -->
+        <section class="glass rounded-2xl p-6 md:p-8">
+            <div class="flex items-center space-x-3 mb-6">
+                <i data-lucide="cpu" class="w-6 h-6 text-industry-amber"></i>
+                <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">Module 1: What is Data Science?</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <p class="text-slate-900 dark:text-slate-100 mb-6 leading-relaxed">
+                        In the industrial sector, Data Science is the crucial bridge between raw physical sensor data
+                        and strategic decision-making. It transforms chaotic industrial noise into predictive
+                        mathematics.
+                    </p>
+
+                    <div class="flex items-center space-x-4 mb-4">
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300" id="m1-label-raw">Raw Noise</span>
+                        <div
+                            class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" name="toggle" id="m1-toggle"
+                                class="toggle-checkbox toggle-w12 absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-300 ease-in-out"
+                                style="top: 2px; left: 2px;" />
+                            <label for="m1-toggle"
+                                class="toggle-label block overflow-hidden h-7 rounded-full bg-slate-200 cursor-pointer transition-colors duration-300"></label>
+                        </div>
+                        <span class="text-sm font-medium text-industry-cyan" id="m1-label-intel">Actionable
+                            Intelligence</span>
+                    </div>
+                </div>
+
+                <div class="relative h-48 rounded-xl overflow-hidden bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800" id="m1-display">
+                    <!-- Raw Noise View -->
+                    <div id="m1-raw"
+                        class="absolute inset-0 p-4 raw-noise-container text-xs text-slate-400 opacity-100 transition-opacity duration-500">
+                        <div class="raw-noise-content" id="m1-noise-content"></div>
+                    </div>
+
+                    <!-- Actionable Intelligence View -->
+                    <div id="m1-intel"
+                        class="absolute inset-0 p-6 flex flex-col justify-center items-center bg-slate-50 dark:bg-slate-900 opacity-0 pointer-events-none transition-opacity duration-500 glow-cyan">
+                        <i data-lucide="activity" class="w-12 h-12 text-industry-cyan mb-3"></i>
+                        <h3 class="text-xl font-bold text-slate-900 mb-1">Pump P-104 Status</h3>
+                        <div
+                            class="bg-white dark:bg-slate-800 px-4 py-2 rounded-lg border border-industry-cyan text-industry-cyan font-mono text-lg font-semibold shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+                            Remaining Useful Life: 14 Days
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODULE 2: The Industrial DS Workflow -->
+        <section class="glass rounded-2xl p-6 md:p-8">
+            <div class="flex items-center space-x-3 mb-8">
+                <i data-lucide="workflow" class="w-6 h-6 text-industry-cyan"></i>
+                <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">Module 2: The Industrial DS Workflow</h2>
+            </div>
+
+            <div
+                class="relative w-64 h-64 sm:w-80 sm:h-80 mx-auto mb-16 mt-8 border-2 border-dashed border-slate-200 rounded-full">
+                <!-- Particle Wrapper -->
+                <div class="absolute inset-0 animate-[spin_8s_linear_infinite] z-0 pointer-events-none">
+                    <div
+                        class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-industry-cyan rounded-full shadow-[0_0_20px_#06b6d4]">
+                    </div>
+                </div>
+
+                <!-- Center Core -->
+                <div
+                    class="absolute inset-12 sm:inset-16 rounded-full border border-slate-100 flex items-center justify-center bg-white/50 shadow-inner">
+                    <i data-lucide="refresh-cw"
+                        class="w-10 h-10 text-slate-700 animate-[spin_12s_linear_infinite_reverse]"></i>
+                </div>
+
+                <!-- Steps -->
+                <div class="step-item absolute top-[0%] left-[50%] -translate-x-1/2 -translate-y-1/2 active cursor-pointer flex flex-col items-center"
+                    onclick="setWorkflowStep(0)">
+                    <div class="step-circle pulse-step" style="animation-delay: 0s;"><i data-lucide="target"
+                            class="w-5 h-5"></i></div>
+                    <div
+                        class="absolute bottom-full mb-3 font-medium text-xs sm:text-sm text-slate-900 dark:text-white text-center w-24 transition-colors">
+                        Define</div>
+                </div>
+                <div class="step-item absolute top-[25%] left-[93.3%] -translate-x-1/2 -translate-y-1/2 cursor-pointer flex flex-col items-center"
+                    onclick="setWorkflowStep(1)">
+                    <div class="step-circle pulse-step" style="animation-delay: 1.33s;"><i data-lucide="database"
+                            class="w-5 h-5"></i></div>
+                    <div
+                        class="absolute left-full ml-3 top-1/2 -translate-y-1/2 font-medium text-xs sm:text-sm text-slate-600 dark:text-slate-400 text-center w-24 transition-colors">
+                        Collect</div>
+                </div>
+                <div class="step-item absolute top-[75%] left-[93.3%] -translate-x-1/2 -translate-y-1/2 cursor-pointer flex flex-col items-center"
+                    onclick="setWorkflowStep(2)">
+                    <div class="step-circle pulse-step" style="animation-delay: 2.66s;"><i data-lucide="filter"
+                            class="w-5 h-5"></i></div>
+                    <div
+                        class="absolute left-full ml-3 top-1/2 -translate-y-1/2 font-medium text-xs sm:text-sm text-slate-600 dark:text-slate-400 text-center w-24 transition-colors">
+                        Clean</div>
+                </div>
+                <div class="step-item absolute top-[100%] left-[50%] -translate-x-1/2 -translate-y-1/2 cursor-pointer flex flex-col items-center"
+                    onclick="setWorkflowStep(3)">
+                    <div class="step-circle pulse-step" style="animation-delay: 4s;"><i data-lucide="line-chart"
+                            class="w-5 h-5"></i></div>
+                    <div
+                        class="absolute top-full mt-3 font-medium text-xs sm:text-sm text-slate-600 dark:text-slate-400 text-center w-24 transition-colors">
+                        Analyze</div>
+                </div>
+                <div class="step-item absolute top-[75%] left-[6.7%] -translate-x-1/2 -translate-y-1/2 cursor-pointer flex flex-col items-center"
+                    onclick="setWorkflowStep(4)">
+                    <div class="step-circle pulse-step" style="animation-delay: 5.33s;"><i data-lucide="brain-circuit"
+                            class="w-5 h-5"></i></div>
+                    <div
+                        class="absolute right-full mr-3 top-1/2 -translate-y-1/2 font-medium text-xs sm:text-sm text-slate-600 dark:text-slate-400 text-center w-24 transition-colors">
+                        Model</div>
+                </div>
+                <div class="step-item absolute top-[25%] left-[6.7%] -translate-x-1/2 -translate-y-1/2 cursor-pointer flex flex-col items-center"
+                    onclick="setWorkflowStep(5)">
+                    <div class="step-circle pulse-step" style="animation-delay: 6.66s;"><i data-lucide="rocket"
+                            class="w-5 h-5"></i></div>
+                    <div
+                        class="absolute right-full mr-3 top-1/2 -translate-y-1/2 font-medium text-xs sm:text-sm text-slate-600 dark:text-slate-400 text-center w-24 transition-colors">
+                        Deploy</div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 relative overflow-hidden" id="workflow-details">
+                <div class="absolute top-0 left-0 w-1 h-full bg-industry-cyan"></div>
+                <h4 class="text-industry-cyan font-semibold mb-2 flex items-center"><i data-lucide="info"
+                        class="w-4 h-4 mr-2"></i>Industry Case Study</h4>
+                <div id="workflow-content" class="text-slate-800 dark:text-slate-200">
+                    <strong class="text-slate-900 dark:text-white block mb-1">Data Acquisition</strong>
+                    Ingesting high-frequency SCADA logs and telemetry from offshore platforms in Mumbai High.
+                    Capturing pressures, temperatures, and flow rates at 1-second intervals.
+                </div>
+            </div>
+        </section>
+
+        <!-- MODULE 3: Types of Data -->
+        <section class="glass rounded-2xl p-6 md:p-8">
+            <div class="flex items-center space-x-3 mb-6">
+                <i data-lucide="split-square-horizontal" class="w-6 h-6 text-industry-amber"></i>
+                <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">Module 3: Types of Data</h2>
+            </div>
+
+            <p class="text-slate-800 dark:text-slate-200 mb-8">Understanding data types is fundamental. Interact with these everyday
+                examples to see how data is structured.</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Categorical Data -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+                    <h3 class="text-xl font-semibold text-slate-900 mb-4 flex items-center"><i data-lucide="shapes"
+                            class="w-5 h-5 text-purple-600 mr-2"></i>Categorical Data</h3>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 mb-6">Represents characteristics or qualities that can be grouped
+                        into categories.</p>
+
+                    <div class="space-y-6">
+                        <!-- Nominal -->
+                        <div class="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <h4 class="font-medium text-purple-700 mb-1">Nominal (No inherent order)</h4>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">Example: Ice Cream Flavors</p>
+                            <div class="flex space-x-3">
+                                <button
+                                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded text-sm transition-colors text-slate-900"
+                                    onclick="document.getElementById('nom-res').textContent='Vanilla'">Vanilla</button>
+                                <button
+                                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded text-sm transition-colors text-slate-900"
+                                    onclick="document.getElementById('nom-res').textContent='Chocolate'">Chocolate</button>
+                                <button
+                                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded text-sm transition-colors text-slate-900"
+                                    onclick="document.getElementById('nom-res').textContent='Strawberry'">Strawberry</button>
+                            </div>
+                            <div class="mt-3 text-sm text-slate-800 dark:text-slate-200">Selected: <span id="nom-res"
+                                    class="font-semibold text-slate-900 dark:text-white">None</span></div>
+                        </div>
+
+                        <!-- Ordinal -->
+                        <div class="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <h4 class="font-medium text-purple-700 mb-1">Ordinal (Has logical order)</h4>
+                            <p class="text-xs text-slate-400 mb-3">Example: Customer Satisfaction</p>
+                            <div class="flex space-x-2 text-slate-700 dark:text-slate-300">
+                                <i data-lucide="star"
+                                    class="w-6 h-6 cursor-pointer hover:text-yellow-400 transition-colors ordinal-star"
+                                    data-val="1"></i>
+                                <i data-lucide="star"
+                                    class="w-6 h-6 cursor-pointer hover:text-yellow-400 transition-colors ordinal-star"
+                                    data-val="2"></i>
+                                <i data-lucide="star"
+                                    class="w-6 h-6 cursor-pointer hover:text-yellow-400 transition-colors ordinal-star"
+                                    data-val="3"></i>
+                                <i data-lucide="star"
+                                    class="w-6 h-6 cursor-pointer hover:text-yellow-400 transition-colors ordinal-star"
+                                    data-val="4"></i>
+                                <i data-lucide="star"
+                                    class="w-6 h-6 cursor-pointer hover:text-yellow-400 transition-colors ordinal-star"
+                                    data-val="5"></i>
+                            </div>
+                            <div class="mt-3 text-sm text-slate-800 dark:text-slate-200">Rating: <span id="ord-res"
+                                    class="font-semibold text-slate-900 dark:text-white">0 / 5</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Numerical Data -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+                    <h3 class="text-xl font-semibold text-slate-900 mb-4 flex items-center"><i data-lucide="binary"
+                            class="w-5 h-5 text-emerald-600 mr-2"></i>Numerical Data</h3>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 mb-6">Represents measurable quantities, expressed as numbers.</p>
+
+                    <div class="space-y-6">
+                        <!-- Discrete -->
+                        <div class="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <h4 class="font-medium text-emerald-700 mb-1">Discrete (Countable, whole numbers)</h4>
+                            <p class="text-xs text-slate-400 mb-3">Example: Number of Emails in Inbox</p>
+                            <div class="flex items-center space-x-4">
+                                <button
+                                    class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-900 font-bold transition-colors"
+                                    onclick="updateDiscrete(-1)">-</button>
+                                <div class="text-2xl font-mono text-slate-900 w-12 text-center" id="disc-val">5</div>
+                                <button
+                                    class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-900 font-bold transition-colors"
+                                    onclick="updateDiscrete(1)">+</button>
+                            </div>
+                        </div>
+
+                        <!-- Continuous -->
+                        <div class="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <h4 class="font-medium text-emerald-700 mb-1">Continuous (Measurable, fractional)</h4>
+                            <p class="text-xs text-slate-400 mb-3">Example: Daily Temperature (°C)</p>
+                            <input type="range" min="15" max="40" step="0.1" value="23.4"
+                                class="w-full accent-green-400" id="cont-slider"
+                                oninput="document.getElementById('cont-val').textContent = parseFloat(this.value).toFixed(1)">
+                            <div class="mt-3 text-sm text-slate-800 dark:text-slate-200">Temp: <span id="cont-val"
+                                    class="font-mono text-lg text-slate-900 dark:text-white">23.4</span> °C</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODULE 4: The Four Pillars of Industry Data -->
+        <section class="glass rounded-2xl p-6 md:p-8">
+            <div class="flex items-center space-x-3 mb-6">
+                <i data-lucide="layout-grid" class="w-6 h-6 text-industry-cyan"></i>
+                <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">Module 4: The Four Pillars of Industry Data</h2>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Pillar 1: Sensor Data -->
+                <div class="bg-white/50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold text-slate-900 dark:text-white flex items-center"><i data-lucide="zap"
+                                class="w-4 h-4 text-industry-amber mr-2"></i> Sensor Data (High-Velocity)</h3>
+                        <button id="btn-hard-rock"
+                            class="px-3 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded text-xs transition-colors">
+                            Simulate Hard Rock
+                        </button>
+                    </div>
+                    <div class="h-40 relative">
+                        <canvas id="chart-drill"></canvas>
+                    </div>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 mt-3 text-center">Real-time Drill Bit Vibration (100ms updates)</p>
+                </div>
+
+                <!-- Pillar 2: Time-Series -->
+                <div class="bg-white/50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold text-slate-900 dark:text-white flex items-center"><i data-lucide="trending-up"
+                                class="w-4 h-4 text-industry-cyan mr-2"></i> Time-Series (Historical)</h3>
+                        <span class="text-xs text-slate-700 dark:text-slate-300" id="time-zoom-label">24 Hours</span>
+                    </div>
+                    <div class="h-32 relative mb-4">
+                        <canvas id="chart-pipeline"></canvas>
+                    </div>
+                    <input type="range" id="time-slider" min="1" max="30" value="1" class="w-full accent-industry-cyan">
+                    <p class="text-xs text-slate-700 dark:text-slate-300 mt-2 text-center">Pipeline Flow (MMSCMD) - Zoom Out to see trends
+                    </p>
+                </div>
+
+                <!-- Pillar 3: SCADA -->
+                <div
+                    class="bg-white/50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-5 flex flex-col md:flex-row gap-6 items-center">
+                    <div class="flex-1 w-full">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold text-slate-900 dark:text-white flex items-center"><i data-lucide="sliders"
+                                    class="w-4 h-4 text-industry-red mr-2"></i> SCADA (Control)</h3>
+                        </div>
+                        <div class="bg-slate-100 dark:bg-slate-950 rounded p-3 font-mono text-[10px] text-emerald-600 h-24 overflow-y-auto"
+                            id="scada-log">
+                            > SYSTEM INITIALIZED<br>
+                            > SEPARATOR TANK T-201 NORMAL<br>
+                            > WATER LEVEL: 30%<br>
+                            > PRODUCT LEVEL: 70%<br>
+                        </div>
+                        <button id="btn-valve"
+                            class="mt-4 w-full py-2 bg-red-100 hover:bg-industry-red/40 border border-industry-red rounded text-sm text-red-900 transition-colors">
+                            Open Drain Valve
+                        </button>
+                    </div>
+                    <div class="w-32 flex flex-col items-center">
+                        <div class="tank">
+                            <div class="tank-level tank-product" id="tank-product"></div>
+                            <div class="tank-level tank-water" id="tank-water"></div>
+                        </div>
+                        <span class="text-xs text-slate-700 dark:text-slate-300 mt-2">Separator Tank</span>
+                    </div>
+                </div>
+
+                <!-- Pillar 4: Process -->
+                <div class="bg-white/50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-5 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold text-slate-900 dark:text-white flex items-center"><i data-lucide="table"
+                                class="w-4 h-4 text-purple-600 mr-2"></i> Process (Relational)</h3>
+                    </div>
+                    <div class="flex-1 overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-800 dark:text-slate-200">
+                            <thead class="text-xs text-slate-900 dark:text-slate-100 uppercase bg-slate-100 dark:bg-slate-800">
+                                <tr>
+                                    <th class="px-4 py-2 rounded-tl-lg">Batch ID</th>
+                                    <th class="px-4 py-2">Crude Type</th>
+                                    <th class="px-4 py-2">Avg Temp (°C)</th>
+                                    <th class="px-4 py-2 rounded-tr-lg">Yield (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+                                    <td class="px-4 py-2 font-mono text-industry-cyan">B-4921</td>
+                                    <td class="px-4 py-2">Arab Light</td>
+                                    <td class="px-4 py-2">342.5</td>
+                                    <td class="px-4 py-2">84.2</td>
+                                </tr>
+                                <tr class="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+                                    <td class="px-4 py-2 font-mono text-industry-cyan">B-4922</td>
+                                    <td class="px-4 py-2">Mumbai High</td>
+                                    <td class="px-4 py-2">350.1</td>
+                                    <td class="px-4 py-2">88.5</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-4 py-2 font-mono text-industry-cyan">B-4923</td>
+                                    <td class="px-4 py-2">Brent Blend</td>
+                                    <td class="px-4 py-2">345.8</td>
+                                    <td class="px-4 py-2">86.1</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 mt-3 text-center">Batch records aggregate thousands of sensor
+                        readings into single relational rows.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODULE 5: The Data Quality Lab -->
+        <section class="glass rounded-2xl p-6 md:p-8 border-t-4 border-t-industry-red glow-red" id="lab-section">
+            <div class="flex items-center space-x-3 mb-6">
+                <i data-lucide="flask-conical" class="w-6 h-6 text-industry-red"></i>
+                <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">Module 5: The Data Quality Lab <span
+                        class="text-sm font-normal text-industry-red ml-2 border border-industry-red px-2 py-1 rounded bg-industry-red/10">CRITICAL</span>
+                </h2>
+            </div>
+
+            <p class="text-slate-800 dark:text-slate-200 mb-6">Data models are only as good as the data fed into them. Use the Stress Test
+                Playground below to inject real-world errors into a healthy sensor signal.</p>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 relative">
+                    <canvas id="chart-quality" height="120"></canvas>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800">
+                        <h4 class="text-sm uppercase tracking-wider text-slate-900 dark:text-white mb-4 font-semibold">Corruption
+                            Toggles</h4>
+
+                        <div class="space-y-4">
+                            <label class="flex items-center justify-between cursor-pointer group">
+                                <span class="text-sm text-slate-700 dark:text-slate-300 group-hover:text-industry-cyan transition-colors">Sensor
+                                    Drift</span>
+                                <div class="relative inline-block w-10 align-middle select-none">
+                                    <input type="checkbox" id="tgl-drift"
+                                        class="toggle-checkbox toggle-w10 absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-300"
+                                        style="top: 2px; left: 2px;" />
+                                    <label for="tgl-drift"
+                                        class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-colors duration-300"></label>
+                                </div>
+                            </label>
+
+                            <label class="flex items-center justify-between cursor-pointer group">
+                                <span class="text-sm text-slate-700 dark:text-slate-300 group-hover:text-industry-cyan transition-colors">Packet
+                                    Loss</span>
+                                <div class="relative inline-block w-10 align-middle select-none">
+                                    <input type="checkbox" id="tgl-loss"
+                                        class="toggle-checkbox toggle-w10 absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-300"
+                                        style="top: 2px; left: 2px;" />
+                                    <label for="tgl-loss"
+                                        class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-colors duration-300"></label>
+                                </div>
+                            </label>
+
+                            <label class="flex items-center justify-between cursor-pointer group">
+                                <span
+                                    class="text-sm text-slate-700 dark:text-slate-300 group-hover:text-industry-cyan transition-colors">Outliers
+                                    / Spikes</span>
+                                <div class="relative inline-block w-10 align-middle select-none">
+                                    <input type="checkbox" id="tgl-outliers"
+                                        class="toggle-checkbox toggle-w10 absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-300"
+                                        style="top: 2px; left: 2px;" />
+                                    <label for="tgl-outliers"
+                                        class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-colors duration-300"></label>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 text-center relative overflow-hidden"
+                        id="confidence-card">
+                        <div class="absolute inset-0 opacity-10 bg-gradient-to-t from-industry-cyan to-transparent transition-colors duration-500"
+                            id="confidence-bg"></div>
+                        <h4 class="text-sm uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 relative z-10">Model Confidence
+                        </h4>
+                        <div class="text-5xl font-bold text-industry-cyan mb-2 transition-colors duration-500 relative z-10"
+                            id="confidence-score">99%</div>
+                        <div class="text-xs font-semibold text-emerald-600 uppercase tracking-widest relative z-10"
+                            id="confidence-status">Healthy Signal</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Global Error Handler for Debugging
+        window.onerror = function (msg, url, line, col, error) {
+            const errDiv = document.createElement('div');
+            errDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:red;color:white;z-index:9999;padding:20px;font-family:monospace;font-size:16px;';
+            errDiv.innerHTML = '<strong>JS Error:</strong> ' + msg + '<br>Line: ' + line + ' Col: ' + col;
+            document.body.appendChild(errDiv);
+            return false;
+        };
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Common Chart Defaults
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.font.family = 'Inter, sans-serif';
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+        Chart.defaults.plugins.tooltip.titleColor = '#0f172a';
+        Chart.defaults.plugins.tooltip.bodyColor = '#475569';
+        Chart.defaults.plugins.tooltip.borderColor = '#e2e8f0';
+        Chart.defaults.plugins.tooltip.borderWidth = 1;
+
+        // --- MODULE 1: Perspective Toggle ---
+        const m1Toggle = document.getElementById('m1-toggle');
+        const m1Raw = document.getElementById('m1-raw');
+        const m1Intel = document.getElementById('m1-intel');
+        const m1NoiseContent = document.getElementById('m1-noise-content');
+
+        // Generate dummy raw hex/sensor data
+        let noiseStr = '';
+        for (let i = 0; i < 150; i++) {
+            noiseStr += `0x${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')} TEMP:${(Math.random() * 100 + 50).toFixed(2)} PRES:${(Math.random() * 500 + 1000).toFixed(0)} FLOW:${(Math.random() * 5).toFixed(3)}<br>`;
+        }
+        m1NoiseContent.innerHTML = noiseStr;
+
+        m1Toggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                m1Raw.classList.replace('opacity-100', 'opacity-0');
+                m1Intel.classList.replace('opacity-0', 'opacity-100');
+                m1Intel.classList.remove('pointer-events-none');
+            } else {
+                m1Raw.classList.replace('opacity-0', 'opacity-100');
+                m1Intel.classList.replace('opacity-100', 'opacity-0');
+                m1Intel.classList.add('pointer-events-none');
+            }
+        });
+
+        // --- MODULE 2: Stepper ---
+        const workflowData = [
+            { title: "Define", desc: "Defining the business objective: e.g., Reducing unplanned downtime of centrifugal pumps by 20% using predictive maintenance." },
+            { title: "Collect", desc: "Ingesting high-frequency SCADA logs and telemetry from offshore platforms. Capturing pressures, temperatures, and flow rates." },
+            { title: "Clean", desc: "Applying signal processing to remove noise from sensors. Imputing missing values caused by telemetry dropouts using interpolation." },
+            { title: "Analyze", desc: "Performing Exploratory Data Analysis (EDA) to find correlations between bearing vibrations and seal failures." },
+            { title: "Model", desc: "Training an LSTM (Long Short-Term Memory) neural network on historical failure data to detect anomalous patterns." },
+            { title: "Deploy", desc: "Deploying the containerized model to edge devices. Sending real-time predictive alerts directly to the driller's console via webhooks." }
+        ];
+
+        function setWorkflowStep(index) {
+            const items = document.querySelectorAll('.step-item');
+            items.forEach((item, i) => {
+                const text = item.querySelector('.font-medium');
+                if (i === index) {
+                    item.classList.add('active');
+                    text.classList.remove('text-slate-600', 'dark:text-slate-400');
+                    text.classList.add('text-slate-900', 'dark:text-white');
+                } else {
+                    item.classList.remove('active');
+                    text.classList.add('text-slate-600', 'dark:text-slate-400');
+                    text.classList.remove('text-slate-900', 'dark:text-white');
+                }
+            });
+
+            const content = document.getElementById('workflow-content');
+            content.style.opacity = 0;
+            setTimeout(() => {
+                content.innerHTML = `<strong class="text-slate-900 dark:text-white block mb-1">${workflowData[index].title}</strong>${workflowData[index].desc}`;
+                content.style.opacity = 1;
+            }, 200);
+        }
+
+        // --- MODULE 3: Types of Data ---
+        const stars = document.querySelectorAll('.ordinal-star');
+        const ordRes = document.getElementById('ord-res');
+        stars.forEach((star, index) => {
+            star.addEventListener('click', () => {
+                stars.forEach((s, i) => {
+                    if (i <= index) {
+                        s.classList.remove('text-slate-700', 'dark:text-slate-300');
+                        s.classList.add('text-yellow-400');
+                        s.style.fill = '#facc15';
+                    } else {
+                        s.classList.add('text-slate-700', 'dark:text-slate-300');
+                        s.classList.remove('text-yellow-400');
+                        s.style.fill = 'none';
+                    }
+                });
+                ordRes.textContent = `${index + 1} / 5`;
+            });
+        });
+
+        let discreteCount = 5;
+        function updateDiscrete(change) {
+            discreteCount += change;
+            if (discreteCount < 0) discreteCount = 0;
+            document.getElementById('disc-val').textContent = discreteCount;
+        }
+
+        // --- MODULE 4: Pillars ---
+
+        // Pillar 1: Drill Chart (High Velocity)
+        const ctxDrill = document.getElementById('chart-drill').getContext('2d');
+        const drillData = Array.from({ length: 50 }, () => 0);
+        const drillChart = new Chart(ctxDrill, {
+            type: 'line',
+            data: {
+                labels: Array.from({ length: 50 }, (_, i) => i),
+                datasets: [{
+                    label: 'Vibration Amplitude',
+                    data: drillData,
+                    borderColor: '#f59e0b',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    x: { display: false },
+                    y: { min: -10, max: 10, grid: { color: '#e2e8f0' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        let drillHardRock = false;
+        document.getElementById('btn-hard-rock').addEventListener('click', function () {
+            drillHardRock = !drillHardRock;
+            this.classList.toggle('bg-industry-amber');
+            this.classList.toggle('text-slate-900');
+            this.classList.toggle('dark:text-white');
+            this.textContent = drillHardRock ? 'Normal Formation' : 'Simulate Hard Rock';
+        });
+
+        let drillPhase = 0;
+        function updateDrillChart() {
+            drillData.shift();
+            let baseVib = Math.sin(drillPhase) * 2 + (Math.random() * 2 - 1);
+            if (drillHardRock) {
+                baseVib += (Math.random() * 16 - 8); // High frequency/amplitude
+            }
+            drillData.push(baseVib);
+            drillChart.update();
+            drillPhase += 0.5;
+            setTimeout(() => requestAnimationFrame(updateDrillChart), 100);
+        }
+        requestAnimationFrame(updateDrillChart);
+
+        // Pillar 2: Time Series
+        const ctxPipe = document.getElementById('chart-pipeline').getContext('2d');
+        const pipeBaseData = [];
+        let trend = 50;
+        for (let i = 0; i < 720; i++) { // 30 days * 24 hours
+            trend += (Math.random() - 0.48) * 2;
+            pipeBaseData.push(trend + Math.sin(i / 12) * 5);
+        }
+
+        const pipeChart = new Chart(ctxPipe, {
+            type: 'line',
+            data: {
+                labels: Array.from({ length: 24 }, (_, i) => i),
+                datasets: [{
+                    label: 'Flow (MMSCMD)',
+                    data: pipeBaseData.slice(-24),
+                    borderColor: '#06b6d4',
+                    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { color: '#e2e8f0' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        document.getElementById('time-slider').addEventListener('input', (e) => {
+            const days = parseInt(e.target.value);
+            document.getElementById('time-zoom-label').textContent = days === 1 ? '24 Hours' : `${days} Days`;
+            const dataPoints = days * 24;
+            const sliceData = pipeBaseData.slice(-dataPoints);
+            pipeChart.data.labels = Array.from({ length: dataPoints }, (_, i) => i);
+            pipeChart.data.datasets[0].data = sliceData;
+            pipeChart.update();
+        });
+
+        // Pillar 3: SCADA Tank
+        const btnValve = document.getElementById('btn-valve');
+        const scadaLog = document.getElementById('scada-log');
+        const tankWater = document.getElementById('tank-water');
+        const tankOil = document.getElementById('tank-product');
+        let valveOpen = false;
+
+        function addLog(msg, isError = false) {
+            const time = new Date().toISOString().substring(11, 19);
+            const span = document.createElement('span');
+            span.innerHTML = `[${time}] ${msg}<br>`;
+            if (isError) span.className = 'text-red-600';
+            scadaLog.appendChild(span);
+            scadaLog.scrollTop = scadaLog.scrollHeight;
+        }
+
+        btnValve.addEventListener('click', () => {
+            valveOpen = !valveOpen;
+            if (valveOpen) {
+                btnValve.textContent = 'Close Drain Valve';
+                btnValve.classList.add('bg-industry-red', 'text-slate-900', 'dark:text-white');
+                btnValve.classList.remove('bg-red-100', 'dark:bg-industry-red/20', 'text-red-900', 'dark:text-red-100');
+                tankWater.style.height = '5%';
+                tankOil.style.height = '35%';
+                addLog('WARNING: DRAIN VALVE OPENED MANUALLY', true);
+                addLog('LEVELS DROPPING RAPIDLY', true);
+            } else {
+                btnValve.textContent = 'Open Drain Valve';
+                btnValve.classList.remove('bg-industry-red', 'text-slate-900', 'dark:text-white');
+                btnValve.classList.add('bg-red-100', 'dark:bg-industry-red/20', 'text-red-900', 'dark:text-red-100');
+                tankWater.style.height = '30%';
+                tankOil.style.height = '70%';
+                addLog('DRAIN VALVE CLOSED');
+                addLog('LEVELS NORMALIZING');
+            }
+        });
+
+        // --- MODULE 5: Data Quality Lab ---
+        const ctxQual = document.getElementById('chart-quality').getContext('2d');
+        const qualDataLen = 100;
+        const qualChart = new Chart(ctxQual, {
+            type: 'line',
+            data: {
+                labels: Array.from({ length: qualDataLen }, (_, i) => i),
+                datasets: [{
+                    label: 'Sensor Reading',
+                    data: Array.from({ length: qualDataLen }, () => 0),
+                    borderColor: '#10b981', // green default
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 1,
+                    segment: {
+                        borderColor: ctx => skipped(ctx, 'rgba(255,255,255,0.1)') || down(ctx, 'rgb(239, 68, 68)'),
+                        borderDash: ctx => skipped(ctx, [6, 6]),
+                    }
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    x: { display: false },
+                    y: { min: -15, max: 25, grid: { color: '#e2e8f0' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        function skipped(ctx, value) { return ctx.p0.parsed.y === null || ctx.p1.parsed.y === null ? value : undefined; }
+        function down(ctx, value) { return ctx.p0.parsed.y > 15 || ctx.p1.parsed.y > 15 ? value : undefined; } // Highlight spikes
+
+        let qPhase = 0;
+        let qDriftCounter = 0;
+        const tglDrift = document.getElementById('tgl-drift');
+        const tglLoss = document.getElementById('tgl-loss');
+        const tglOutliers = document.getElementById('tgl-outliers');
+
+        const confScore = document.getElementById('confidence-score');
+        const confStatus = document.getElementById('confidence-status');
+        const confBg = document.getElementById('confidence-bg');
+        const labSection = document.getElementById('lab-section');
+
+        function updateQualityChart() {
+            let dataArr = qualChart.data.datasets[0].data;
+            dataArr.shift();
+
+            // Clean Signal
+            let val = Math.sin(qPhase) * 5;
+
+            // Apply Drfit
+            if (tglDrift.checked) {
+                qDriftCounter += 0.05;
+                val += qDriftCounter;
+            } else {
+                qDriftCounter = Math.max(0, qDriftCounter - 0.2); // recover slowly
+                val += qDriftCounter;
+            }
+
+            // Apply Outliers
+            if (tglOutliers.checked && Math.random() > 0.9) {
+                val += (Math.random() > 0.5 ? 15 : -15);
+            }
+
+            // Apply Packet Loss
+            if (tglLoss.checked && Math.random() > 0.8) {
+                val = null; // Chart.js handles nulls by breaking the line or skipping
+            }
+
+            dataArr.push(val);
+            qPhase += 0.1;
+
+            // Calculate Score
+            let score = 99;
+            if (tglDrift.checked) score -= 25;
+            if (tglLoss.checked) score -= 30;
+            if (tglOutliers.checked) score -= 24;
+
+            // Update UI based on score
+            confScore.textContent = `${score}%`;
+            if (score > 80) {
+                qualChart.data.datasets[0].borderColor = '#10b981'; // Green
+                confScore.className = 'text-5xl font-bold mb-2 transition-colors duration-500 relative z-10 text-industry-cyan';
+                confStatus.textContent = 'HEALTHY SIGNAL';
+                confStatus.className = 'text-xs font-semibold uppercase tracking-widest relative z-10 text-industry-cyan';
+                confBg.className = 'absolute inset-0 opacity-10 transition-colors duration-500 bg-gradient-to-t from-industry-cyan to-transparent';
+                labSection.classList.remove('glow-red', 'border-t-industry-red');
+            } else if (score > 50) {
+                qualChart.data.datasets[0].borderColor = '#f59e0b'; // Amber
+                confScore.className = 'text-5xl font-bold mb-2 transition-colors duration-500 relative z-10 text-industry-amber';
+                confStatus.textContent = 'DEGRADED';
+                confStatus.className = 'text-xs font-semibold uppercase tracking-widest relative z-10 text-industry-amber';
+                confBg.className = 'absolute inset-0 opacity-10 transition-colors duration-500 bg-gradient-to-t from-industry-amber to-transparent';
+                labSection.classList.remove('glow-red', 'border-t-industry-red');
+            } else {
+                qualChart.data.datasets[0].borderColor = '#dc2626'; // Red
+                confScore.className = 'text-5xl font-bold mb-2 transition-colors duration-500 relative z-10 text-industry-red';
+                confStatus.textContent = 'DO NOT DEPLOY';
+                confStatus.className = 'text-xs font-semibold uppercase tracking-widest relative z-10 text-industry-red animate-pulse';
+                confBg.className = 'absolute inset-0 opacity-10 transition-colors duration-500 bg-gradient-to-t from-industry-red to-transparent';
+                labSection.classList.add('glow-red', 'border-t-industry-red');
+            }
+
+            qualChart.update();
+            setTimeout(() => requestAnimationFrame(updateQualityChart), 50);
+        }
+        requestAnimationFrame(updateQualityChart);
+
+        // --- Theme Toggle Logic ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIconDark = document.getElementById('theme-icon-dark');
+        const themeIconLight = document.getElementById('theme-icon-light');
+
+        function applyTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                themeIconLight.classList.remove('hidden');
+                themeIconDark.classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeIconDark.classList.remove('hidden');
+                themeIconLight.classList.add('hidden');
+            }
+
+            const gridColor = isDark ? '#334155' : '#e2e8f0';
+            Chart.defaults.color = isDark ? '#ffffff' : '#0f172a';
+            Chart.defaults.plugins.tooltip.backgroundColor = isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+            Chart.defaults.plugins.tooltip.titleColor = isDark ? '#fff' : '#0f172a';
+            Chart.defaults.plugins.tooltip.bodyColor = isDark ? '#f8fafc' : '#334155';
+            Chart.defaults.plugins.tooltip.borderColor = isDark ? '#475569' : '#cbd5e1';
+
+            if (typeof drillChart !== 'undefined') { drillChart.options.scales.y.grid.color = gridColor; drillChart.update(); }
+            if (typeof pipeChart !== 'undefined') { pipeChart.options.scales.y.grid.color = gridColor; pipeChart.update(); }
+            if (typeof qualChart !== 'undefined') { qualChart.options.scales.y.grid.color = gridColor; qualChart.update(); }
+        }
+
+        // Initialize theme
+        const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const storedTheme = localStorage.getItem('color-theme');
+        const initialDark = storedTheme === 'dark' || (!storedTheme && isSystemDark);
+        applyTheme(initialDark);
+
+        themeToggleBtn.addEventListener('click', function () {
+            const isCurrentlyDark = document.documentElement.classList.contains('dark');
+            const newTheme = !isCurrentlyDark;
+            localStorage.setItem('color-theme', newTheme ? 'dark' : 'light');
+            applyTheme(newTheme);
+        });
+
+    </script>
+</body>
+
+</html>
