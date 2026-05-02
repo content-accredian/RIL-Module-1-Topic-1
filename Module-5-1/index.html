@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MLOps Interactive Learning</title>
+
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --blue: #1d4ed8;
+      --blue-dark: #0f2d75;
+      --blue-light: #eff6ff;
+      --green: #16a34a;
+      --green-light: #f0fdf4;
+      --red: #dc2626;
+      --red-light: #fef2f2;
+      --amber: #d97706;
+      --amber-light: #fffbeb;
+      --teal: #0d9488;
+      --gray: #6b7280;
+      --gray-light: #e5e7eb;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--gray-light);
+    }
+
+    .nav {
+      max-width: 1180px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      gap: 16px;
+    }
+
+    .brand {
+      font-weight: 800;
+      font-size: 20px;
+      color: var(--blue-dark);
+      white-space: nowrap;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .nav-link {
+      color: var(--gray);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      transition: 0.2s;
+    }
+
+    .nav-link:hover {
+      background: var(--blue-light);
+      color: var(--blue);
+    }
+
+    main {
+      max-width: 1180px;
+      margin: auto;
+      padding: 28px 20px 80px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ffffff, #eff6ff);
+      border: 1px solid #bfdbfe;
+      border-radius: 28px;
+      padding: 36px;
+      box-shadow: 0 20px 50px rgba(15, 45, 117, 0.08);
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(32px, 5vw, 56px);
+      line-height: 1.05;
+      color: var(--blue-dark);
+      letter-spacing: -1.4px;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--gray);
+      max-width: 780px;
+      font-size: 18px;
+    }
+
+    section {
+      background: var(--card);
+      border: 1px solid var(--gray-light);
+      border-radius: 26px;
+      padding: 28px;
+      margin-top: 28px;
+      box-shadow: 0 14px 35px rgba(17, 24, 39, 0.06);
+    }
+
+    .section-title {
+      margin: 0 0 6px;
+      font-size: clamp(24px, 3vw, 34px);
+      color: var(--blue-dark);
+      letter-spacing: -0.6px;
+    }
+
+    .section-subtitle {
+      margin: 0 0 24px;
+      color: var(--gray);
+      font-size: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+      align-items: start;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      border: 1px solid var(--gray-light);
+      border-radius: 22px;
+      padding: 20px;
+      background: #fff;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      color: var(--blue-dark);
+      font-size: 20px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      background: var(--blue-light);
+      border: 1px solid #bfdbfe;
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .metric small {
+      display: block;
+      color: var(--gray);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--blue-dark);
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .control {
+      margin: 14px 0 20px;
+    }
+
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-weight: 800;
+      color: var(--blue-dark);
+    }
+
+    .control span {
+      color: var(--blue);
+      background: var(--blue-light);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    .progress-wrap {
+      margin: 12px 0;
+    }
+
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: var(--gray);
+    }
+
+    .progress {
+      height: 10px;
+      background: #eef2f7;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: var(--blue);
+      transition: width 0.25s ease, background 0.25s ease;
+    }
+
+    .alert {
+      border: 1px solid var(--gray-light);
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-weight: 700;
+      margin-top: 14px;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      min-height: 320px;
+    }
+
+    canvas {
+      width: 100% !important;
+      max-height: 360px;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    button, .btn {
+      border: 0;
+      background: var(--blue);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.2s;
+      font-family: inherit;
+    }
+
+    button:hover, .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(29, 78, 216, 0.2);
+    }
+
+    button.secondary {
+      background: var(--blue-light);
+      color: var(--blue);
+      border: 1px solid #bfdbfe;
+    }
+
+    button.active {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+
+    .check-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin: 10px 0;
+      font-weight: 700;
+      color: var(--blue-dark);
+    }
+
+    .check-row input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--green);
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .stat-box {
+      background: #f9fafb;
+      border: 1px solid var(--gray-light);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .stat-box span {
+      display: block;
+      color: var(--gray);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .stat-box strong {
+      display: block;
+      font-size: 24px;
+      color: var(--blue-dark);
+    }
+
+    .explain-box {
+      background: #f9fafb;
+      border: 1px solid var(--gray-light);
+      border-radius: 18px;
+      padding: 16px;
+      color: var(--gray);
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--gray);
+      padding: 30px 20px;
+    }
+
+    @media (max-width: 900px) {
+      .grid,
+      .grid-3,
+      .metric-grid,
+      .stat-row {
+        grid-template-columns: 1fr;
+      }
+
+      .nav {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      section, .hero {
+        padding: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="nav">
+      <div class="brand">MLOps Interactive Learning</div>
+      <div class="nav-links">
+        <a class="nav-link" href="#gps">Model Drift</a>
+        <a class="nav-link" href="#team">Team Roles</a>
+        <a class="nav-link" href="#drift">Drift Simulator</a>
+        <a class="nav-link" href="#retraining">Retraining Cost</a>
+        <a class="nav-link" href="#repro">Reproducibility</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>MLOps: Keep Models Working in the Real World</h1>
+      <p>Use the simulators below to understand model drift, team balance, retraining cost, and reproducibility in production ML systems.</p>
+    </div>
+
+    <!-- SECTION 1 -->
+    <section id="gps">
+      <h2 class="section-title">1. Model Drift: From Accurate to Outdated</h2>
+      <p class="section-subtitle">A model can work perfectly at first, but become unreliable as the world changes.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h3>GPS Example</h3>
+          <div class="control">
+            <label for="gps-years">Years without update <span id="gps-years-val">0 years</span></label>
+            <input id="gps-years" type="range" min="0" max="6" value="0" oninput="updateGPS()" />
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric"><small>Roads Changed</small><strong id="gps-roads">0%</strong></div>
+            <div class="metric"><small>Accuracy</small><strong id="gps-acc">100%</strong></div>
+            <div class="metric"><small>Misses</small><strong id="gps-miss">0/day</strong></div>
+          </div>
+
+          <div class="progress-wrap">
+            <div class="progress-row"><span>Road changes</span><span id="gps-roads-label"></span></div>
+            <div class="progress"><div class="bar" id="gps-roads-bar"></div></div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-row"><span>Model accuracy</span><span></span></div>
+            <div class="progress"><div class="bar" id="gps-acc-bar"></div></div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-row"><span>Wrong predictions</span><span></span></div>
+            <div class="progress"><div class="bar" id="gps-miss-bar" style="background: var(--red);"></div></div>
+          </div>
+
+          <div class="alert" id="gps-alert"></div>
+        </div>
+
+        <div class="card">
+          <h3>Accuracy vs World Change</h3>
+          <div class="canvas-wrap">
+            <canvas id="gpsChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section id="team">
+      <h2 class="section-title">2. DevOps + DataOps + MLOps</h2>
+      <p class="section-subtitle">Good ML systems need software reliability, data quality, and model monitoring.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Build Your Team</h3>
+          <div class="control">
+            <label for="devops-count">DevOps engineers <span id="devops-count-val">2</span></label>
+            <input id="devops-count" type="range" min="0" max="6" value="2" oninput="updateTeam()" />
+          </div>
+          <div class="control">
+            <label for="dataops-count">DataOps engineers <span id="dataops-count-val">2</span></label>
+            <input id="dataops-count" type="range" min="0" max="6" value="2" oninput="updateTeam()" />
+          </div>
+          <div class="control">
+            <label for="mlops-count">MLOps engineers <span id="mlops-count-val">2</span></label>
+            <input id="mlops-count" type="range" min="0" max="6" value="2" oninput="updateTeam()" />
+          </div>
+          <div class="alert" id="team-alert"></div>
+        </div>
+
+        <div class="card">
+          <h3>System Health</h3>
+          <div class="canvas-wrap">
+            <canvas id="teamChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section id="drift">
+      <h2 class="section-title">3. Drift Simulator</h2>
+      <p class="section-subtitle">Watch how sensor changes reduce model accuracy over time.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Oil Pump Sensor Drift</h3>
+          <div class="control">
+            <label for="drift-month">Months after deployment <span id="drift-month-val">0 months</span></label>
+            <input id="drift-month" type="range" min="0" max="12" value="0" oninput="updateDrift()" />
+          </div>
+
+          <div class="stat-row">
+            <div class="stat-box"><span>Temperature</span><strong id="d-temp">85°C</strong><span id="d-temp-delta">Δ 0°C</span></div>
+            <div class="stat-box"><span>Vibration</span><strong id="d-vib">3.2 mm/s</strong><span id="d-vib-delta">Δ 0.0</span></div>
+            <div class="stat-box"><span>Pressure</span><strong id="d-pres">450 PSI</strong><span id="d-pres-delta">Δ 0</span></div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-box"><span>Accuracy</span><strong id="d-acc">92%</strong><span id="d-acc-delta">✅ OK</span></div>
+          </div>
+
+          <div class="alert" id="drift-alert"></div>
+        </div>
+
+        <div class="card">
+          <h3>Sensor Change vs Accuracy</h3>
+          <div class="canvas-wrap">
+            <canvas id="driftChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 22px;">
+        <h3>Data Drift vs Model Drift</h3>
+        <div class="pill-row">
+          <button class="active" id="btn-data-drift" onclick="switchDriftType('data')">Data Drift</button>
+          <button class="secondary" id="btn-model-drift" onclick="switchDriftType('model')">Model Drift</button>
+        </div>
+        <div class="explain-box" id="drift-explain-box">
+          <strong>Data Drift:</strong> New pump type installed in Month 4. Sensor readings shift dramatically — model trained on old pump patterns starts failing.
+        </div>
+        <div class="control">
+          <label for="drift2-slider">Highlight month <span id="drift2-val">0</span></label>
+          <input id="drift2-slider" type="range" min="0" max="12" value="0" oninput="updateDrift2()" />
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="driftTypeChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4 -->
+    <section id="retraining">
+      <h2 class="section-title">4. Retraining Cost Calculator</h2>
+      <p class="section-subtitle">Retraining helps fix drift, but cost and budget decide how often it can happen.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Cost Inputs</h3>
+          <div class="control">
+            <label for="rt-compute">Compute cost <span id="rt-compute-val">$1000</span></label>
+            <input id="rt-compute" type="range" min="200" max="5000" step="100" value="1000" oninput="updateRetrain()" />
+          </div>
+          <div class="control">
+            <label for="rt-eng">Engineer time <span id="rt-eng-val">5 hrs</span></label>
+            <input id="rt-eng" type="range" min="1" max="40" value="5" oninput="updateRetrain()" />
+          </div>
+          <div class="control">
+            <label for="rt-rate">Engineer rate <span id="rt-rate-val">$80/hr</span></label>
+            <input id="rt-rate" type="range" min="30" max="250" step="10" value="80" oninput="updateRetrain()" />
+          </div>
+          <div class="control">
+            <label for="rt-budget">Yearly budget <span id="rt-budget-val">$12000</span></label>
+            <input id="rt-budget" type="range" min="1000" max="80000" step="1000" value="12000" oninput="updateRetrain()" />
+          </div>
+
+          <div class="stat-row">
+            <div class="stat-box"><span>Cost / retrain</span><strong id="rs-cost">$1400</strong></div>
+            <div class="stat-box"><span>Retrains / year</span><strong id="rs-count">8</strong></div>
+            <div class="stat-box"><span>Weeks between</span><strong id="rs-weeks">6.5</strong></div>
+          </div>
+          <div class="alert" id="retrain-alert"></div>
+        </div>
+
+        <div class="card">
+          <h3>Yearly Retraining Schedule</h3>
+          <div class="canvas-wrap">
+            <canvas id="retrainChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top: 22px;">
+        <div class="card">
+          <h3>Cost Optimization Strategies</h3>
+          <label class="check-row"><input id="strat-incremental" type="checkbox" checked onchange="updateStrategies()" /> Incremental learning</label>
+          <label class="check-row"><input id="strat-spot" type="checkbox" checked onchange="updateStrategies()" /> Cheaper compute / spot instances</label>
+          <label class="check-row"><input id="strat-threshold" type="checkbox" checked onchange="updateStrategies()" /> Retrain only when drift is detected</label>
+
+          <div class="stat-row">
+            <div class="stat-box"><span>Original</span><strong id="strat-original">$1400</strong></div>
+            <div class="stat-box"><span>New cost</span><strong id="strat-new">$252</strong></div>
+            <div class="stat-box"><span>Savings</span><strong id="strat-save">82%</strong></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Cost Reduction</h3>
+          <div class="canvas-wrap">
+            <canvas id="strategyChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5 -->
+    <section id="repro">
+      <h2 class="section-title">5. Reproducibility Simulator</h2>
+      <p class="section-subtitle">Small differences in seed, data version, or library version can change model results.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Try Different Settings</h3>
+          <div class="control">
+            <label for="rp-seed">Random seed <span id="rp-seed-val">42</span></label>
+            <input id="rp-seed" type="range" min="1" max="100" value="42" oninput="updateRepro()" />
+          </div>
+          <div class="control">
+            <label for="rp-data">Data version <span id="rp-data-val">v1.0</span></label>
+            <input id="rp-data" type="range" min="1" max="5" value="1" oninput="updateRepro()" />
+          </div>
+          <div class="control">
+            <label for="rp-lib">Library version <span id="rp-lib-val">1.0.0</span></label>
+            <input id="rp-lib" type="range" min="1" max="4" value="1" oninput="updateRepro()" />
+          </div>
+
+          <div class="stat-row">
+            <div class="stat-box"><span>Reference</span><strong>92%</strong></div>
+            <div class="stat-box"><span>Your run</span><strong id="rp-your-acc">92%</strong></div>
+            <div class="stat-box"><span>Difference</span><strong id="rp-diff">±0%</strong></div>
+          </div>
+          <div class="alert" id="repro-alert"></div>
+        </div>
+
+        <div class="card">
+          <h3>Accuracy Across Runs</h3>
+          <div class="canvas-wrap">
+            <canvas id="reproChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Built for MLOps learning demos — simple, interactive, and classroom friendly.
+  </footer>
+
+  <script>
+    const BLUE = '#1d4ed8';
+    const BLUE_LIGHT = '#bfdbfe';
+    const TEAL = '#0d9488';
+    const ORANGE = '#ea580c';
+    const GREEN = '#16a34a';
+    const RED = '#dc2626';
+    const AMBER = '#d97706';
+    const GRAY = '#6b7280';
+    const GRAY_LIGHT = '#e5e7eb';
+
+    if (window.Chart) {
+      Chart.defaults.font.family = "'DM Sans', sans-serif";
+      Chart.defaults.color = GRAY;
+    }
+
+    let gpsChart, teamChart, driftChart, driftTypeChart, retrainChart, strategyChart, reproChart;
+    let currentDriftType = 'data';
+    let reproRunCount = 0;
+
+    function safeEl(id) {
+      const el = document.getElementById(id);
+      if (!el) console.warn('Missing element:', id);
+      return el;
+    }
+
+    function setText(id, text) {
+      const el = safeEl(id);
+      if (el) el.textContent = text;
+    }
+
+    function setAlert(el, type, text) {
+      if (!el) return;
+      const styles = {
+        green: { bg: '#f0fdf4', bc: '#16a34a', tc: '#14532d' },
+        amber: { bg: '#fffbeb', bc: '#d97706', tc: '#78350f' },
+        red: { bg: '#fef2f2', bc: '#dc2626', tc: '#7f1d1d' }
+      };
+      const s = styles[type] || styles.green;
+      el.style.background = s.bg;
+      el.style.borderColor = s.bc;
+      el.style.color = s.tc;
+      el.textContent = text;
+    }
+
+    function getCanvasContext(id) {
+      const canvas = safeEl(id);
+      if (!canvas) return null;
+      return canvas.getContext('2d');
+    }
+
+    // SECTION 1 — GPS / MLOps Chart
+    function initGPSChart() {
+      const ctx = getCanvasContext('gpsChart');
+      if (!ctx || !window.Chart) return;
+
+      gpsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Year 0', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'],
+          datasets: [
+            {
+              label: 'Model Accuracy (%)',
+              data: [100, 85, 70, 58, 42, 28, 15],
+              borderColor: RED,
+              backgroundColor: 'rgba(220,38,38,0.08)',
+              fill: true,
+              tension: 0.4,
+              pointBackgroundColor: RED,
+              pointRadius: 5,
+              borderWidth: 2.5
+            },
+            {
+              label: 'Roads Changed (%)',
+              data: [0, 15, 28, 42, 55, 68, 82],
+              borderColor: BLUE,
+              backgroundColor: 'rgba(29,78,216,0.06)',
+              fill: true,
+              tension: 0.4,
+              pointBackgroundColor: BLUE,
+              pointRadius: 5,
+              borderWidth: 2.5,
+              borderDash: [5, 3]
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 400 },
+          plugins: {
+            legend: { position: 'top', labels: { usePointStyle: true, pointStyleWidth: 8, padding: 16, font: { size: 12 } } },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            y: { min: 0, max: 110, grid: { color: GRAY_LIGHT }, ticks: { callback: v => v + '%' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function updateGPS() {
+      const slider = safeEl('gps-years');
+      if (!slider) return;
+      const v = parseInt(slider.value, 10);
+
+      setText('gps-years-val', v + (v === 1 ? ' year' : ' years'));
+
+      const roadPct = Math.min(Math.round(v * 13.5), 90);
+      const accPct = Math.max(Math.round(100 - v * 13), 10);
+      const missPct = Math.max(Math.round(v * 2.5), 0);
+
+      setText('gps-roads', roadPct + '%');
+      setText('gps-acc', accPct + '%');
+      setText('gps-miss', missPct + '/day');
+
+      const roadsBar = safeEl('gps-roads-bar');
+      const accBar = safeEl('gps-acc-bar');
+      const missBar = safeEl('gps-miss-bar');
+
+      if (roadsBar) roadsBar.style.width = roadPct + '%';
+      if (accBar) {
+        accBar.style.width = accPct + '%';
+        accBar.style.background = accPct > 75 ? GREEN : accPct > 50 ? AMBER : RED;
+      }
+      if (missBar) missBar.style.width = Math.min(missPct * 10, 100) + '%';
+
+      const msgs = [
+        { type: 'green', text: '✅ Model is perfectly up to date. Zero drift detected.' },
+        { type: 'green', text: '✅ Minor drift. A few new roads. Model still reliable at 85%.' },
+        { type: 'amber', text: '⚠️ Noticeable drift. Model is struggling. Consider scheduling a retrain.' },
+        { type: 'amber', text: '⚠️ Significant drift! Accuracy below 60%. Retraining is overdue.' },
+        { type: 'red', text: '🔴 Severe drift! Model accuracy at 42%. Dangerous for production.' },
+        { type: 'red', text: '🔴 Critical failure! Model is nearly useless. Emergency retrain required.' },
+        { type: 'red', text: '🔴 Model has completely failed. 15% accuracy — worse than random guessing.' }
+      ];
+      const m = msgs[Math.min(v, 6)];
+      setAlert(safeEl('gps-alert'), m.type, m.text);
+
+      if (gpsChart) {
+        gpsChart.data.datasets[0].pointRadius = gpsChart.data.datasets[0].data.map((_, i) => i === v ? 10 : 5);
+        gpsChart.data.datasets[0].pointBackgroundColor = gpsChart.data.datasets[0].data.map((_, i) => i === v ? '#7f1d1d' : RED);
+        gpsChart.update('none');
+      }
+    }
+
+    // SECTION 2 — Team Chart
+    function initTeamChart() {
+      const ctx = getCanvasContext('teamChart');
+      if (!ctx || !window.Chart) return;
+
+      teamChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['App Uptime', 'Data Quality', 'Model Accuracy', 'Deploy Speed', 'Incident Response', 'Automation'],
+          datasets: [{
+            label: 'System Health',
+            data: [80, 75, 72, 68, 70, 65],
+            borderColor: BLUE,
+            backgroundColor: 'rgba(29,78,216,0.12)',
+            pointBackgroundColor: BLUE,
+            borderWidth: 2,
+            pointRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 300 },
+          plugins: { legend: { display: false } },
+          scales: {
+            r: {
+              min: 0,
+              max: 100,
+              ticks: { stepSize: 20, font: { size: 11 }, callback: v => v + '%' },
+              grid: { color: GRAY_LIGHT },
+              pointLabels: { font: { size: 12 } }
+            }
+          }
+        }
+      });
+    }
+
+    function updateTeam() {
+      const dev = parseInt(safeEl('devops-count')?.value || 0, 10);
+      const data = parseInt(safeEl('dataops-count')?.value || 0, 10);
+      const ml = parseInt(safeEl('mlops-count')?.value || 0, 10);
+
+      setText('devops-count-val', dev);
+      setText('dataops-count-val', data);
+      setText('mlops-count-val', ml);
+
+      const uptime = Math.min(10 + dev * 15, 100);
+      const quality = Math.min(10 + data * 15, 100);
+      const accuracy = Math.min(10 + ml * 15, 100);
+      const deploySpeed = Math.min(10 + dev * 12 + ml * 5, 100);
+      const incident = Math.min(10 + (dev + data + ml) * 5, 100);
+      const automation = Math.min(5 + ml * 16, 100);
+
+      if (teamChart) {
+        teamChart.data.datasets[0].data = [uptime, quality, accuracy, deploySpeed, incident, automation];
+        teamChart.update();
+      }
+
+      const total = dev + data + ml;
+      const alertEl = safeEl('team-alert');
+      if (total === 0) setAlert(alertEl, 'red', '🔴 No engineers! System is unmanaged. Immediate failure expected.');
+      else if (ml === 0) setAlert(alertEl, 'amber', '⚠️ No MLOps engineers. Models can drift silently with no monitoring.');
+      else if (data === 0) setAlert(alertEl, 'amber', '⚠️ No DataOps. Models may receive unreliable sensor data.');
+      else if (dev === 0) setAlert(alertEl, 'amber', '⚠️ No DevOps. Models exist, but the platform may be unstable.');
+      else if (Math.max(dev, data, ml) > Math.min(dev, data, ml) * 3) setAlert(alertEl, 'amber', '⚠️ Unbalanced team. One role is understaffed.');
+      else setAlert(alertEl, 'green', '✅ Balanced team. All key functions are covered.');
+    }
+
+    // SECTION 3 — Drift Simulator
+    function initDriftChart() {
+      const ctx = getCanvasContext('driftChart');
+      if (!ctx || !window.Chart) return;
+
+      driftChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: 13 }, (_, i) => 'M' + i),
+          datasets: [
+            {
+              label: 'Pump Temp (°C)',
+              data: Array.from({ length: 13 }, (_, i) => Math.max(85 - i * 2.5, 53)),
+              borderColor: ORANGE,
+              backgroundColor: 'rgba(234,88,12,0.07)',
+              fill: false,
+              tension: 0.3,
+              pointRadius: 4,
+              borderWidth: 2,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Model Accuracy (%)',
+              data: Array.from({ length: 13 }, (_, i) => Math.max(92 - i * 2.5, 55)),
+              borderColor: BLUE,
+              backgroundColor: 'rgba(29,78,216,0.07)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 4,
+              borderWidth: 2.5,
+              yAxisID: 'y2'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 400 },
+          plugins: {
+            legend: { position: 'top', labels: { usePointStyle: true, font: { size: 12 }, padding: 14 } },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            y: { position: 'left', min: 40, max: 100, ticks: { callback: v => v + '°C' }, grid: { color: GRAY_LIGHT } },
+            y2: { position: 'right', min: 40, max: 100, ticks: { callback: v => v + '%' }, grid: { display: false } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function updateDrift() {
+      const v = parseInt(safeEl('drift-month')?.value || 0, 10);
+      setText('drift-month-val', v + (v === 1 ? ' month' : ' months'));
+
+      const temp = Math.max(85 - v * 2.5, 53).toFixed(0);
+      const vib = Math.max(3.2 - v * 0.12, 1.6).toFixed(1);
+      const pres = Math.max(450 - v * 10, 340).toFixed(0);
+      const acc = Math.max(92 - v * 2.5, 55).toFixed(0);
+
+      setText('d-temp', temp + '°C');
+      setText('d-vib', vib + ' mm/s');
+      setText('d-pres', pres + ' PSI');
+      setText('d-acc', acc + '%');
+
+      const dtEl = safeEl('d-temp-delta');
+      const dvEl = safeEl('d-vib-delta');
+      const dpEl = safeEl('d-pres-delta');
+      const daEl = safeEl('d-acc-delta');
+
+      if (dtEl) dtEl.textContent = 'Δ ' + (temp - 85).toFixed(0) + '°C';
+      if (dvEl) dvEl.textContent = 'Δ ' + (vib - 3.2).toFixed(1) + ' mm/s';
+      if (dpEl) dpEl.textContent = 'Δ ' + (pres - 450).toFixed(0) + ' PSI';
+      if (daEl) daEl.textContent = acc > 85 ? '✅ OK' : acc > 70 ? '⚠️ Warning' : '🔴 Critical';
+
+      const deltaColor = v === 0 ? GRAY : v < 4 ? AMBER : RED;
+      [dtEl, dvEl, dpEl].forEach(el => { if (el) el.style.color = deltaColor; });
+      if (daEl) daEl.style.color = acc > 85 ? GREEN : acc > 70 ? AMBER : RED;
+
+      if (acc > 85) setAlert(safeEl('drift-alert'), 'green', '✅ No drift detected. Model is reliable.');
+      else if (acc > 72) setAlert(safeEl('drift-alert'), 'amber', '⚠️ Drift detected. Schedule retraining soon.');
+      else setAlert(safeEl('drift-alert'), 'red', '🔴 Severe drift! Retrain immediately.');
+
+      if (driftChart) {
+        driftChart.data.datasets.forEach(ds => {
+          ds.pointRadius = ds.data.map((_, i) => i === v ? 9 : 4);
+        });
+        driftChart.update('none');
+      }
+    }
+
+    function getDataDriftData() {
+      return Array.from({ length: 13 }, (_, i) => i < 4 ? 92 - i * 0.5 : Math.max(88 - (i - 4) * 4.5, 48));
+    }
+
+    function getModelDriftData() {
+      return Array.from({ length: 13 }, (_, i) => i < 6 ? 92 - i * 0.8 : Math.max(87 - (i - 6) * 5, 50));
+    }
+
+    function getMLOpsRecoveryData() {
+      return Array.from({ length: 13 }, (_, i) => i < 4 ? null : Math.min(88 + (i % 3) * 1.4, 95));
+    }
+
+    function initDriftTypeChart() {
+      const ctx = getCanvasContext('driftTypeChart');
+      if (!ctx || !window.Chart) return;
+
+      driftTypeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: 13 }, (_, i) => 'M' + i),
+          datasets: [
+            {
+              label: 'Accuracy — Data Drift',
+              data: getDataDriftData(),
+              borderColor: RED,
+              backgroundColor: 'rgba(220,38,38,0.06)',
+              fill: true,
+              tension: 0.3,
+              borderWidth: 2.5,
+              pointRadius: 4
+            },
+            {
+              label: 'Accuracy with MLOps',
+              data: getMLOpsRecoveryData(),
+              borderColor: GREEN,
+              backgroundColor: 'rgba(22,163,74,0.06)',
+              fill: true,
+              tension: 0.3,
+              borderWidth: 2.5,
+              borderDash: [6, 3],
+              pointRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 400 },
+          plugins: {
+            legend: { position: 'top', labels: { usePointStyle: true, font: { size: 12 }, padding: 14 } },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            y: { min: 40, max: 100, grid: { color: GRAY_LIGHT }, ticks: { callback: v => v + '%' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function switchDriftType(type) {
+      currentDriftType = type;
+      safeEl('btn-data-drift')?.classList.toggle('active', type === 'data');
+      safeEl('btn-model-drift')?.classList.toggle('active', type === 'model');
+      safeEl('btn-data-drift')?.classList.toggle('secondary', type !== 'data');
+      safeEl('btn-model-drift')?.classList.toggle('secondary', type !== 'model');
+
+      const explainEl = safeEl('drift-explain-box');
+      if (type === 'data') {
+        if (explainEl) explainEl.innerHTML = '<strong>Data Drift:</strong> New pump type installed in Month 4. Sensor readings shift — the model trained on old pump patterns starts failing.';
+        if (driftTypeChart) {
+          driftTypeChart.data.datasets[0].data = getDataDriftData();
+          driftTypeChart.data.datasets[0].label = 'Accuracy — Data Drift';
+        }
+      } else {
+        if (explainEl) explainEl.innerHTML = '<strong>Model Drift:</strong> Real-world relationships change over time. The same old model logic no longer matches reality.';
+        if (driftTypeChart) {
+          driftTypeChart.data.datasets[0].data = getModelDriftData();
+          driftTypeChart.data.datasets[0].label = 'Accuracy — Model Drift';
+        }
+      }
+      if (driftTypeChart) driftTypeChart.update();
+      updateDrift2();
+    }
+
+    function updateDrift2() {
+      const v = parseInt(safeEl('drift2-slider')?.value || 0, 10);
+      setText('drift2-val', v);
+      if (driftTypeChart) {
+        driftTypeChart.data.datasets.forEach(ds => {
+          ds.pointRadius = ds.data.map((value, i) => value !== null && i === v ? 9 : 4);
+        });
+        driftTypeChart.update('none');
+      }
+    }
+
+    // SECTION 4 — Retraining Cost
+    function initRetrainChart() {
+      const ctx = getCanvasContext('retrainChart');
+      if (!ctx || !window.Chart) return;
+
+      retrainChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          datasets: [
+            { label: 'Retraining Cost ($)', data: [], backgroundColor: BLUE, borderRadius: 6, borderSkipped: false },
+            { label: 'Budget limit', data: [], type: 'line', borderColor: RED, borderWidth: 2, borderDash: [6, 3], pointRadius: 0, fill: false }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 300 },
+          plugins: {
+            legend: { position: 'top', labels: { usePointStyle: true, font: { size: 12 }, padding: 14 } },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            y: { beginAtZero: true, grid: { color: GRAY_LIGHT }, ticks: { callback: v => '$' + v.toLocaleString() } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function updateRetrain() {
+      const compute = parseInt(safeEl('rt-compute')?.value || 1000, 10);
+      const eng = parseInt(safeEl('rt-eng')?.value || 5, 10);
+      const rate = parseInt(safeEl('rt-rate')?.value || 80, 10);
+      const budget = parseInt(safeEl('rt-budget')?.value || 12000, 10);
+
+      setText('rt-compute-val', '$' + compute.toLocaleString());
+      setText('rt-eng-val', eng + ' hrs');
+      setText('rt-rate-val', '$' + rate + '/hr');
+      setText('rt-budget-val', '$' + budget.toLocaleString());
+
+      const costPerRetrain = compute + eng * rate;
+      const retrainsPerYear = Math.floor(budget / costPerRetrain);
+      const weeksBetween = retrainsPerYear > 0 ? (52 / retrainsPerYear).toFixed(1) : '∞';
+
+      setText('rs-cost', '$' + costPerRetrain.toLocaleString());
+      setText('rs-count', retrainsPerYear);
+      setText('rs-weeks', weeksBetween);
+
+      const monthlyCosts = Array.from({ length: 12 }, (_, i) => {
+        const retrainsThisMonth = Math.floor((i + 1) * retrainsPerYear / 12) - Math.floor(i * retrainsPerYear / 12);
+        return retrainsThisMonth * costPerRetrain;
+      });
+
+      const monthlyBudget = budget / 12;
+      if (retrainChart) {
+        retrainChart.data.datasets[0].data = monthlyCosts;
+        retrainChart.data.datasets[1].data = Array(12).fill(monthlyBudget);
+        retrainChart.options.scales.y.max = Math.max(...monthlyCosts, monthlyBudget, 100) * 1.25;
+        retrainChart.update();
+      }
+
+      if (retrainsPerYear >= 12) setAlert(safeEl('retrain-alert'), 'green', '✅ Monthly retraining is possible. Model stays fresh.');
+      else if (retrainsPerYear >= 6) setAlert(safeEl('retrain-alert'), 'amber', '⚠️ Retraining every ' + weeksBetween + ' weeks. Drift may appear between retrains.');
+      else if (retrainsPerYear >= 2) setAlert(safeEl('retrain-alert'), 'red', '🔴 Only ' + retrainsPerYear + ' retrains per year. High drift risk.');
+      else setAlert(safeEl('retrain-alert'), 'red', '🔴 Budget too low for meaningful retraining.');
+
+      updateStrategies();
+    }
+
+    function initStrategyChart() {
+      const ctx = getCanvasContext('strategyChart');
+      if (!ctx || !window.Chart) return;
+
+      strategyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Original', 'Incremental', 'Cheaper Compute', 'Drift Triggered'],
+          datasets: [{ label: 'Cost per retrain ($)', data: [1400, 840, 420, 252], backgroundColor: [RED, AMBER, TEAL, GREEN], borderRadius: 8, borderSkipped: false }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 300 },
+          indexAxis: 'y',
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' $' + ctx.raw.toLocaleString() } } },
+          scales: {
+            x: { beginAtZero: true, grid: { color: GRAY_LIGHT }, ticks: { callback: v => '$' + v.toLocaleString() } },
+            y: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function updateStrategies() {
+      const inc = safeEl('strat-incremental')?.checked ?? true;
+      const spot = safeEl('strat-spot')?.checked ?? true;
+      const thresh = safeEl('strat-threshold')?.checked ?? true;
+
+      const compute = parseInt(safeEl('rt-compute')?.value || 1000, 10);
+      const eng = parseInt(safeEl('rt-eng')?.value || 5, 10);
+      const rate = parseInt(safeEl('rt-rate')?.value || 80, 10);
+      const original = compute + eng * rate;
+
+      let current = original;
+      if (inc) current *= 0.6;
+      if (spot) current *= 0.7;
+      if (thresh) current *= 0.85;
+      current = Math.max(current, original * 0.1);
+
+      const savePct = Math.round((1 - current / original) * 100);
+      setText('strat-original', '$' + original.toLocaleString());
+      setText('strat-new', '$' + Math.round(current).toLocaleString());
+      setText('strat-save', savePct + '%');
+
+      if (strategyChart) {
+        const step1 = original;
+        const step2 = inc ? original * 0.6 : original;
+        const step3 = spot ? step2 * 0.7 : step2;
+        const step4 = thresh ? step3 * 0.85 : step3;
+        strategyChart.data.datasets[0].data = [step1, step2, step3, step4].map(v => Math.round(v));
+        strategyChart.update();
+      }
+    }
+
+    // SECTION 5 — Reproducibility
+    const libVersions = ['1.0.0', '1.3.2', '1.8.0', '2.1.0'];
+    const dataVersions = ['v1.0', 'v1.2', 'v2.0', 'v2.5', 'v3.0'];
+
+    function initReproChart() {
+      const ctx = getCanvasContext('reproChart');
+      if (!ctx || !window.Chart) return;
+
+      reproChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Ref (A)'],
+          datasets: [{ label: 'Model Accuracy (%)', data: [92], backgroundColor: [GREEN], borderRadius: 6, borderSkipped: false }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 300 },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' Accuracy: ' + ctx.raw + '%' } } },
+          scales: {
+            y: { min: 60, max: 100, grid: { color: GRAY_LIGHT }, ticks: { callback: v => v + '%' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function updateRepro() {
+      const seed = parseInt(safeEl('rp-seed')?.value || 42, 10);
+      const dv = parseInt(safeEl('rp-data')?.value || 1, 10);
+      const lv = parseInt(safeEl('rp-lib')?.value || 1, 10);
+
+      setText('rp-seed-val', seed);
+      setText('rp-data-val', dataVersions[dv - 1]);
+      setText('rp-lib-val', libVersions[lv - 1]);
+
+      const seedDiff = Math.abs(seed - 42) > 0 ? Math.floor(Math.abs(seed - 42) / 8) * 1.2 : 0;
+      const dataDiff = (dv - 1) * 2.5;
+      const libDiff = (lv - 1) * 3;
+      const totalDiff = seedDiff + dataDiff + libDiff;
+      const yourAcc = Math.max(Math.round(92 - totalDiff), 68);
+      const diff = 92 - yourAcc;
+
+      const accEl = safeEl('rp-your-acc');
+      if (accEl) {
+        accEl.textContent = yourAcc + '%';
+        accEl.style.color = yourAcc === 92 ? GREEN : yourAcc > 85 ? AMBER : RED;
+      }
+
+      const diffEl = safeEl('rp-diff');
+      if (diffEl) {
+        diffEl.textContent = (diff === 0 ? '±' : '-') + diff + '%';
+        diffEl.style.color = diff === 0 ? GREEN : diff <= 3 ? AMBER : RED;
+      }
+
+      if (diff === 0) setAlert(safeEl('repro-alert'), 'green', '✅ Fully reproducible. Same settings, same result.');
+      else if (diff <= 3) setAlert(safeEl('repro-alert'), 'amber', '⚠️ Small difference detected. Track versions to explain results.');
+      else setAlert(safeEl('repro-alert'), 'red', '🔴 Major accuracy gap. Version tracking is required.');
+
+      reproRunCount++;
+      const runId = reproRunCount;
+      setTimeout(() => {
+        if (runId !== reproRunCount || !reproChart) return;
+        const runLabel = 'Run ' + reproChart.data.labels.length;
+        reproChart.data.labels.push(runLabel);
+        reproChart.data.datasets[0].data.push(yourAcc);
+        reproChart.data.datasets[0].backgroundColor = reproChart.data.datasets[0].data.map(v => v === 92 ? GREEN : v >= 88 ? TEAL : v >= 82 ? AMBER : RED);
+        if (reproChart.data.labels.length > 8) {
+          reproChart.data.labels.splice(1, 1);
+          reproChart.data.datasets[0].data.splice(1, 1);
+          reproChart.data.datasets[0].backgroundColor.splice(1, 1);
+        }
+        reproChart.update();
+      }, 500);
+    }
+
+    // ACTIVE NAV HIGHLIGHT
+    function initNavHighlight() {
+      const sections = document.querySelectorAll('section[id]');
+      const navLinks = document.querySelectorAll('.nav-link');
+      if (!('IntersectionObserver' in window)) return;
+
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            navLinks.forEach(link => {
+              link.style.background = '';
+              link.style.color = '';
+            });
+            const active = document.querySelector('.nav-link[href="#' + entry.target.id + '"]');
+            if (active) {
+              active.style.background = '#eff6ff';
+              active.style.color = '#1d4ed8';
+            }
+          }
+        });
+      }, { threshold: 0.3 });
+
+      sections.forEach(s => observer.observe(s));
+    }
+
+    window.addEventListener('load', () => {
+      if (!window.Chart) {
+        alert('Chart.js did not load. Please check your internet connection or CDN link.');
+        return;
+      }
+
+      initGPSChart();
+      updateGPS();
+
+      initTeamChart();
+      updateTeam();
+
+      initDriftChart();
+      updateDrift();
+
+      initDriftTypeChart();
+      updateDrift2();
+
+      initRetrainChart();
+      updateRetrain();
+
+      initStrategyChart();
+      updateStrategies();
+
+      initReproChart();
+      updateRepro();
+
+      initNavHighlight();
+    });
+  </script>
+</body>
+</html>
