@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML Concepts for Oil & Gas - Interactive Learning</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    :root {
+        --primary: #1a3a52;
+        --secondary: #d4541c;
+        --accent: #f39c12;
+        --light-bg: #f5f7fa;
+        --dark-text: #2c3e50;
+        --border: #e0e8f0;
+        --success: #27ae60;
+        --warning: #e67e22;
+    }
+    
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, var(--primary) 0%, #0f2027 100%);
+        color: var(--dark-text);
+        padding: 20px;
+        min-height: 100vh;
+    }
+    
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        overflow: hidden;
+    }
+    
+    .header {
+        background: linear-gradient(135deg, var(--primary) 0%, #1a4d6d 100%);
+        color: white;
+        padding: 50px 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 400px;
+        height: 400px;
+        background: rgba(212, 84, 28, 0.1);
+        border-radius: 50%;
+    }
+    
+    .header h1 {
+        font-size: 3em;
+        font-weight: 700;
+        margin-bottom: 10px;
+        letter-spacing: 0.5px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .header p {
+        font-size: 1.2em;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .oil-icon {
+        display: inline-block;
+        margin-right: 15px;
+    }
+    
+    .content {
+        padding: 50px 40px;
+    }
+    
+    .topic {
+        margin-bottom: 60px;
+        background: var(--light-bg);
+        border-radius: 14px;
+        padding: 35px;
+        border-left: 6px solid var(--secondary);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .topic:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .topic-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+    
+    .topic-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--secondary), var(--accent));
+        color: white;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 1.5em;
+        margin-right: 20px;
+        flex-shrink: 0;
+    }
+    
+    .topic h2 {
+        font-size: 2.2em;
+        color: var(--primary);
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        margin: 0;
+    }
+    
+    .topic h3 {
+        font-size: 1.4em;
+        color: var(--secondary);
+        margin: 30px 0 20px 0;
+        font-weight: 600;
+    }
+    
+    .theory-box {
+        background: linear-gradient(135deg, rgba(26, 58, 82, 0.05), rgba(212, 84, 28, 0.05));
+        padding: 25px;
+        border-radius: 10px;
+        border-left: 4px solid var(--secondary);
+        margin-bottom: 25px;
+        line-height: 1.8;
+        font-size: 1em;
+    }
+    
+    .theory-box strong {
+        color: var(--primary);
+        font-size: 1.05em;
+    }
+    
+    .demo-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-top: 25px;
+    }
+    
+    .demo-section {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        border: 2px solid var(--border);
+    }
+    
+    .demo-title {
+        font-size: 1.3em;
+        color: var(--primary);
+        margin-bottom: 20px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .demo-icon {
+        width: 35px;
+        height: 35px;
+        background: linear-gradient(135deg, var(--secondary), var(--accent));
+        color: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2em;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 20px;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        font-size: 0.9em;
+    }
+    
+    th, td {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    th {
+        background: linear-gradient(135deg, var(--primary), #1a4d6d);
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.85em;
+    }
+    
+    tr:hover {
+        background: #f0f4f8;
+    }
+    
+    .highlight {
+        background: #d4edda;
+        font-weight: 600;
+        color: #155724;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    
+    .warning-highlight {
+        background: #fff3cd;
+        color: #856404;
+        font-weight: 600;
+        border-radius: 4px;
+    }
+    
+    .info-highlight {
+        background: #d1ecf1;
+        color: #0c5460;
+        font-weight: 600;
+        border-radius: 4px;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    
+    button {
+        background: linear-gradient(135deg, var(--secondary), var(--accent));
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.95em;
+        font-weight: 500;
+    }
+    
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(212, 84, 28, 0.3);
+    }
+    
+    button:active {
+        transform: translateY(0);
+    }
+    
+    .reset-btn {
+        background: linear-gradient(135deg, #6c757d, #5a6268);
+    }
+    
+    .reset-btn:hover {
+        box-shadow: 0 8px 20px rgba(108, 117, 125, 0.3);
+    }
+    
+    .explanation {
+        margin-top: 25px;
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 8px;
+        border-left: 4px solid var(--accent);
+        font-size: 0.95em;
+        line-height: 1.7;
+    }
+    
+    .explanation strong {
+        color: var(--secondary);
+    }
+    
+    .key-point {
+        background: linear-gradient(135deg, #fff3cd, #fffbea);
+        padding: 18px;
+        border-radius: 8px;
+        margin: 20px 0;
+        border-left: 4px solid var(--accent);
+        font-weight: 500;
+    }
+    
+    .formula {
+        background: #f0f4f8;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+        color: var(--primary);
+        margin: 15px 0;
+        overflow-x: auto;
+    }
+    
+    @media (max-width: 768px) {
+        .demo-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+        }
+        
+        table {
+            font-size: 0.8em;
+        }
+        
+        th, td {
+            padding: 8px;
+        }
+    }
+    
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        display: none;
+    }
+    
+    .success-message.show {
+        display: block;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1><span class="oil-icon">🛢️</span>ML for Oil & Gas</h1>
+        <p>Master Machine Learning Concepts with Industry-Specific Examples</p>
+    </div>
+    
+    <div class="content">
+        
+        <!-- Topic 1: Lag Features -->
+        <div class="topic">
+            <div class="topic-header">
+                <div class="topic-number">1</div>
+                <h2>Lag Features in Production Forecasting</h2>
+            </div>
+            
+            <div class="theory-box">
+                <strong>What are Lag Features?</strong><br>
+                Lag features use previous time step values as inputs to predict future values. 
+                In oil & gas operations, yesterday's production often influences today's output due to 
+                equipment constraints, pressure dynamics, and operational continuity.
+            </div>
+            
+            <h3>Example: Daily Crude Oil Production Forecast</h3>
+            <div class="demo-container">
+                <div class="demo-section">
+                    <div class="demo-title">
+                        <div class="demo-icon">📊</div>
+                        Production Data Table
+                    </div>
+                    <div class="button-group">
+                        <button onclick="applyLagFeature()">Apply Lag Feature</button>
+                        <button class="reset-btn" onclick="resetLag()">Reset</button>
+                    </div>
+                    <table id="lagTable">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Production (Barrels)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>12,500</td></tr>
+                            <tr><td>2</td><td>13,200</td></tr>
+                            <tr><td>3</td><td>12,800</td></tr>
+                            <tr><td>4</td><td>14,100</td></tr>
+                            <tr><td>5</td><td>13,900</td></tr>
+                            <tr><td>6</td><td>14,500</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="demo-section">
+                    <div class="demo-title">
+                        <div class="demo-icon">📈</div>
+                        Production Trend
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="lagChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <strong>Why This Matters in Oil & Gas:</strong> Production rates have momentum. 
+                If a well produced 12,500 barrels yesterday, it's likely to produce similar amounts today 
+                unless there's a major operational change. The lag feature captures this autocorrelation, 
+                helping predict production with 15-20% better accuracy.
+            </div>
+        </div>
+
+        <!-- Topic 2: Rolling Windows -->
+        <div class="topic">
+            <div class="topic-header">
+                <div class="topic-number">2</div>
+                <h2>Rolling Windows for Trend Analysis</h2>
+            </div>
+            
+            <div class="theory-box">
+                <strong>What are Rolling Windows?</strong><br>
+                A rolling window calculates statistics (mean, standard deviation) over a sliding subset of data. 
+                In oil operations, a 7-day rolling average smooths out daily fluctuations to reveal true production trends 
+                and detect equipment degradation.
+            </div>
+            
+            <h3>Example: 7-Day Rolling Average of Gas Production</h3>
+            <div class="demo-container">
+                <div class="demo-section">
+                    <div class="demo-title">
+                        <div class="demo-icon">📋</div>
+                        Gas Production Data
+                    </div>
+                    <div class="button-group">
+                        <button onclick="applyRollingWindow()">Apply 7-Day Rolling Average</button>
+                        <button class="reset-btn" onclick="resetRollingWindow()">Reset</button>
+                    </div>
+                    <table id="rollingTable">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Gas Prod (MMcf/d)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>8.2</td></tr>
+                            <tr><td>2</td><td>8.5</td></tr>
+                            <tr><td>3</td><td>8.1</td></tr>
+                            <tr><td>4</td><td>8.7</td></tr>
+                            <tr><td>5</td><td>8.3</td></tr>
+                            <tr><td>6</td><td>8.6</td></tr>
+                            <tr><td>7</td><td>8.4</td></tr>
+                            <tr><td>8</td><td>8.8</td></tr>
+                            <tr><td>9</td><td>8.2</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="demo-section">
+                    <div class="demo-title">
+                        <div class="demo-icon">📉</div>
+                        Production Smoothing
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="rollingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <strong>Industry Application:</strong> Gas wells experience daily pressure fluctuations. 
+                A 7-day rolling average filters out noise to show real production decline. If the rolling average 
+                drops from 8.5 to 7.8 MMcf/d over weeks, it indicates equipment degradation needing intervention.
+            </div>
+        </div>
+
+        <!-- Topic 3: Normalization -->
+        <div class="topic">
+            <div class="topic-header">
+                <div class="topic-number">3</div>
+                <h2>Normalization: Standardizing Data Range</h2>
+            </div>
+            
+            <div class="theory-box">
+                <strong>What is Normalization?</strong><br>
+                Normalization rescales data to a standard range (typically 0-1). This is crucial when features have 
+                different units: production (barrels), temperature (°C), pressure (PSI), and water content (%) 
+                must be comparable for machine learning models.
+            </div>
+            
+            <h3>Example: Well Performance Metrics Normalization</h3>
+            <div class="demo-container">
+                <div class="demo-section">
+                    <div class="demo-title">
+                        <div class="demo-icon">⚙️</div>
+                        Well Metrics (Raw Data)
+                    </div>
+                    <div class="button-group">
+                        <button onclick="applyNormalization()">Apply Min-Max Normalization</button>
+                        <button class="reset-btn" onclick="resetNormalization()">Reset</button>
+                    </div>
+                    <table id="normTable">
+                        <thead>
+                            <tr>
+                                <th>Well</th>
+                                <th>Production (bbl/d)</th>
+                                <th>Temperature (°C)</th>
+                                <th>Pressure (PSI)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>A</td><td>10,000</td><td>45</td><td>2,500</td></tr>
+                            <tr><td>B</td><td>18,000</td><td>62</td><td>4,200</td></tr>
+                            <tr><td>C</td><td>15,000</td><td>55</td><td>3,500</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="demo-section">
+                    <div class="demo-title">
+                        <div class="demo-icon">🎯</div>
+                        Normalized Scale (0-1)
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="normChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="formula">
+                Normalized Value = (Value - Min) / (Max - Min)
+            </div>
+            
+            <div class="explanation">
+                <strong>Why Critical for Oil & Gas:</strong> Without normalization, production values 
+                (thousands) would dominate over pressure values (thousands) in distance-based algorithms. 
+                Normalization ensures all features contribute equally, improving prediction of equipment failures.
+            </div>
+        </div>
+
+        <!-- Topic 4: Scaling/Standardization -->
+        <div class="topic">
+            <div class="topic-header">
+                <div class="topic-number">4</div>
+                <h2>Scaling/Standardization: Zero Mean, Unit Variance</h2>
+            </div>
+            
+            <div class="theory-box">
+                <strong>What is Standardization?</strong><br>
+                Standardization (Z-score normalization) transforms data to have mean=0 and standard deviation=1. 
+                Unlike normalization, this doesn't bound data to 0-1. It's preferred for algorithms like 
+                linear regression and neural networks used in oil production forecasting.
+            </div>
+            
+            <h3>Example: Production Efficiency Standardization</h3>
+            <div class="demo-container">
+                <div class="demo-section">
+                    <div class="demo-title">
+                        <div class="demo-icon">📐</div>
+                        Production Efficiency (%)
+                    </div>
+                    <div class="button-group">
+                        <button onclick="applyScaling()">Apply Standardization</button>
+                        <button class="reset-btn" onclick="resetScaling()">Reset</button>
+                    </div>
+                    <table id="scalingTable">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Efficiency (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Jan</td><td>92</td></tr>
+                            <tr><td>Feb</td><td>88</td></tr>
+                            <tr><td>Mar</td><td>95</td></tr>
+                            <tr><td>Apr</td><td>85</td></tr>
+                            <tr><td>May</td><td>91</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="demo-section">
+                    <div class="demo-title">
+                        <div class="demo-icon">📊</div>
+                        Standardized Distribution
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="scalingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="formula">
+                Standardized Value = (Value - Mean) / Standard Deviation
+            </div>
+            
+            <div class="explanation">
+                <strong>Application in Well Management:</strong> When combining multiple efficiency metrics 
+                (thermal efficiency, mechanical efficiency, etc.), standardization ensures algorithms don't bias 
+                toward metrics with higher natural ranges. This improves anomaly detection for equipment failures.
+            </div>
+        </div>
+
+        <!-- Topic 5: Domain-Specific Features -->
+        <div class="topic">
+            <div class="topic-header">
+                <div class="topic-number">5</div>
+                <h2>Domain-Specific Features for Oil & Gas</h2>
+            </div>
+            
+            <div class="theory-box">
+                <strong>What are Domain-Specific Features?</strong><br>
+                These are engineered features based on deep industry knowledge. Rather than generic features, 
+                they capture domain physics and business logic. For oil & gas, this includes production decline curves, 
+                water-oil ratios, GOR (Gas-Oil Ratio), and pressure differentials.
+            </div>
+            
+            <h3>Example: Well Decline Analysis with Domain Features</h3>
+            <div class="demo-container">
+                <div class="demo-section">
+                    <div class="demo-title">
+                        <div class="demo-icon">🔍</div>
+                        Well Performance Data
+                    </div>
+                    <div class="button-group">
+                        <button onclick="applyDomainFeatures()">Calculate Domain Features</button>
+                        <button class="reset-btn" onclick="resetDomainFeatures()">Reset</button>
+                    </div>
+                    <table id="domainTable">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Oil (bbl/d)</th>
+                                <th>Water (bbl/d)</th>
+                                <th>Gas (Mscf/d)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>5,000</td><td>500</td><td>12.5</td></tr>
+                            <tr><td>2</td><td>4,800</td><td>600</td><td>12.2</td></tr>
+                            <tr><td>3</td><td>4,500</td><td>750</td><td>11.8</td></tr>
+                            <tr><td>4</td><td>4,200</td><td>900</td><td>11.3</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="demo-section">
+                    <div class="demo-title">
+                        <div class="demo-icon">💡</div>
+                        Domain Metrics
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="domainChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="key-point">
+                <strong>Key Domain Features Created:</strong><br>
+                • <strong>Water-Oil Ratio (WOR)</strong> = Water / Oil - Indicates water cut increase (lower well productivity)<br>
+                • <strong>Gas-Oil Ratio (GOR)</strong> = Gas / Oil - Shows solution gas depletion<br>
+                • <strong>Total Liquid</strong> = Oil + Water - Combined production decline metric
+            </div>
+            
+            <div class="explanation">
+                <strong>Industry Insight:</strong> These ratios tell the story of well decline. Rising WOR 
+                means more water production (aging well). Declining GOR indicates loss of gas cap pressure. 
+                Experienced petroleum engineers recognize these patterns; encoding them as features helps 
+                ML models predict remaining productive life and optimize workover decisions.
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let charts = {};
+    
+    // Initialize lag chart
+    function initLagChart() {
+        const ctx = document.getElementById('lagChart').getContext('2d');
+        if (charts.lag) charts.lag.destroy();
+        charts.lag = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6'],
+                datasets: [{
+                    label: 'Daily Production (Barrels)',
+                    data: [12500, 13200, 12800, 14100, 13900, 14500],
+                    borderColor: '#d4541c',
+                    backgroundColor: 'rgba(212, 84, 28, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#d4541c',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true } }
+            }
+        });
+    }
+    
+    // Apply lag feature
+    let lagApplied = false;
+    function applyLagFeature() {
+        if (lagApplied) return;
+        const table = document.getElementById('lagTable');
+        const header = table.rows[0];
+        const th = document.createElement('th');
+        th.innerText = 'Lag 1 (Prev Day)';
+        header.appendChild(th);
+        
+        for (let i = 1; i < table.rows.length; i++) {
+            const cell = document.createElement('td');
+            if (i === 1) {
+                cell.innerText = '-';
+                cell.style.color = '#999';
+            } else {
+                cell.innerText = table.rows[i-1].cells[1].innerText;
+                cell.classList.add('highlight');
+            }
+            table.rows[i].appendChild(cell);
+        }
+        lagApplied = true;
+    }
+    
+    function resetLag() {
+        const table = document.getElementById('lagTable');
+        while (table.rows[0].cells.length > 2) {
+            table.rows[0].deleteCell(-1);
+        }
+        for (let i = 1; i < table.rows.length; i++) {
+            while (table.rows[i].cells.length > 2) {
+                table.rows[i].deleteCell(-1);
+            }
+        }
+        lagApplied = false;
+    }
+
+    // Rolling Window Implementation
+    let rollingApplied = false;
+    function applyRollingWindow() {
+        if (rollingApplied) return;
+        const table = document.getElementById('rollingTable');
+        const header = table.rows[0];
+        const th = document.createElement('th');
+        th.innerText = '7-Day Avg';
+        header.appendChild(th);
+        
+        for (let i = 1; i < table.rows.length; i++) {
+            const cell = document.createElement('td');
+            if (i <= 7) {
+                cell.innerText = '-';
+                cell.style.color = '#999';
+            } else {
+                let sum = 0;
+                for (let j = i-7; j < i; j++) {
+                    sum += parseFloat(table.rows[j].cells[1].innerText);
+                }
+                const avg = (sum / 7).toFixed(2);
+                cell.innerText = avg;
+                cell.classList.add('highlight');
+            }
+            table.rows[i].appendChild(cell);
+        }
+        
+        // Update chart
+        updateRollingChart();
+        rollingApplied = true;
+    }
+    
+    function resetRollingWindow() {
+        const table = document.getElementById('rollingTable');
+        while (table.rows[0].cells.length > 2) {
+            table.rows[0].deleteCell(-1);
+        }
+        for (let i = 1; i < table.rows.length; i++) {
+            while (table.rows[i].cells.length > 2) {
+                table.rows[i].deleteCell(-1);
+            }
+        }
+        initRollingChart();
+        rollingApplied = false;
+    }
+    
+    function initRollingChart() {
+        const ctx = document.getElementById('rollingChart').getContext('2d');
+        if (charts.rolling) charts.rolling.destroy();
+        charts.rolling = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8', 'Day 9'],
+                datasets: [{
+                    label: 'Daily Gas Production (MMcf/d)',
+                    data: [8.2, 8.5, 8.1, 8.7, 8.3, 8.6, 8.4, 8.8, 8.2],
+                    borderColor: '#f39c12',
+                    backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true } }
+            }
+        });
+    }
+    
+    function updateRollingChart() {
+        const ctx = document.getElementById('rollingChart').getContext('2d');
+        if (charts.rolling) charts.rolling.destroy();
+        
+        const rollingAvg = [null, null, null, null, null, null, null, 
+                           8.44, 8.50];
+        
+        charts.rolling = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8', 'Day 9'],
+                datasets: [
+                    {
+                        label: 'Daily Production',
+                        data: [8.2, 8.5, 8.1, 8.7, 8.3, 8.6, 8.4, 8.8, 8.2],
+                        borderColor: '#f39c12',
+                        backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                        tension: 0.3,
+                        borderWidth: 2,
+                        pointRadius: 4
+                    },
+                    {
+                        label: '7-Day Rolling Avg',
+                        data: rollingAvg,
+                        borderColor: '#d4541c',
+                        backgroundColor: 'rgba(212, 84, 28, 0)',
+                        tension: 0.3,
+                        borderWidth: 3,
+                        borderDash: [5, 5],
+                        pointRadius: 4,
+                        pointBackgroundColor: '#d4541c'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true } }
+            }
+        });
+    }
+
+    // Normalization Implementation
+    let normApplied = false;
+    function applyNormalization() {
+        if (normApplied) return;
+        const table = document.getElementById('normTable');
+        const header = table.rows[0];
+        
+        ['Prod (N)', 'Temp (N)', 'Press (N)'].forEach(h => {
+            const th = document.createElement('th');
+            th.innerText = h;
+            header.appendChild(th);
+        });
+        
+        // Get min-max
+        const prods = [10000, 18000, 15000];
+        const temps = [45, 62, 55];
+        const press = [2500, 4200, 3500];
+        
+        const normProd = (val) => (val - Math.min(...prods)) / (Math.max(...prods) - Math.min(...prods));
+        const normTemp = (val) => (val - Math.min(...temps)) / (Math.max(...temps) - Math.min(...temps));
+        const normPress = (val) => (val - Math.min(...press)) / (Math.max(...press) - Math.min(...press));
+        
+        for (let i = 1; i < table.rows.length; i++) {
+            const p = parseInt(table.rows[i].cells[1].innerText.replace(/,/g, ''));
+            const t = parseInt(table.rows[i].cells[2].innerText);
+            const pr = parseInt(table.rows[i].cells[3].innerText.replace(/,/g, ''));
+            
+            [normProd(p), normTemp(t), normPress(pr)].forEach(val => {
+                const td = document.createElement('td');
+                td.innerText = val.toFixed(2);
+                td.classList.add('warning-highlight');
+                table.rows[i].appendChild(td);
+            });
+        }
+        
+        updateNormChart();
+        normApplied = true;
+    }
+    
+    function resetNormalization() {
+        const table = document.getElementById('normTable');
+        while (table.rows[0].cells.length > 4) {
+            table.rows[0].deleteCell(-1);
+        }
+        for (let i = 1; i < table.rows.length; i++) {
+            while (table.rows[i].cells.length > 4) {
+                table.rows[i].deleteCell(-1);
+            }
+        }
+        initNormChart();
+        normApplied = false;
+    }
+    
+    function initNormChart() {
+        const ctx = document.getElementById('normChart').getContext('2d');
+        if (charts.norm) charts.norm.destroy();
+        charts.norm = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Well A', 'Well B', 'Well C'],
+                datasets: [
+                    {
+                        label: 'Production',
+                        data: [10000, 18000, 15000],
+                        backgroundColor: '#d4541c'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: true } }
+            }
+        });
+    }
+    
+    function updateNormChart() {
+    const ctx = document.getElementById('normChart').getContext('2d');
+    if (charts.norm) charts.norm.destroy();
+
+    charts.norm = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Production', 'Temperature', 'Pressure'],
+            datasets: [
+                {
+                    label: 'Well A',
+                    data: [0.00, 0.00, 0.00],
+                    backgroundColor: '#d4541c'
+                },
+                {
+                    label: 'Well B',
+                    data: [1.00, 1.00, 1.00],
+                    backgroundColor: '#27ae60'
+                },
+                {
+                    label: 'Well C',
+                    data: [0.63, 0.60, 0.57],
+                    backgroundColor: '#f39c12'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 1
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true
+                }
+            }
+        }
+    });
+}
+
+    // Scaling Implementation
+    let scalingApplied = false;
+    function applyScaling() {
+        if (scalingApplied) return;
+        const table = document.getElementById('scalingTable');
+        const header = table.rows[0];
+        const th = document.createElement('th');
+        th.innerText = 'Z-Score';
+        header.appendChild(th);
+        
+        const values = [92, 88, 95, 85, 91];
+        const mean = values.reduce((a,b) => a+b) / values.length;
+        const std = Math.sqrt(values.reduce((sq, n) => sq + Math.pow(n - mean, 2), 0) / values.length);
+        
+        for (let i = 1; i < table.rows.length; i++) {
+            const val = parseInt(table.rows[i].cells[1].innerText);
+            const zscore = ((val - mean) / std).toFixed(2);
+            const td = document.createElement('td');
+            td.innerText = zscore;
+            td.classList.add(zscore > 0 ? 'highlight' : 'info-highlight');
+            table.rows[i].appendChild(td);
+        }
+        
+        updateScalingChart();
+        scalingApplied = true;
+    }
+    
+    function resetScaling() {
+        const table = document.getElementById('scalingTable');
+        while (table.rows[0].cells.length > 2) {
+            table.rows[0].deleteCell(-1);
+        }
+        for (let i = 1; i < table.rows.length; i++) {
+            while (table.rows[i].cells.length > 2) {
+                table.rows[i].deleteCell(-1);
+            }
+        }
+        initScalingChart();
+        scalingApplied = false;
+    }
+    
+    function initScalingChart() {
+        const ctx = document.getElementById('scalingChart').getContext('2d');
+        if (charts.scaling) charts.scaling.destroy();
+        charts.scaling = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                datasets: [{
+                    label: 'Efficiency (%)',
+                    data: [92, 88, 95, 85, 91],
+                    backgroundColor: '#d4541c'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true } }
+            }
+        });
+    }
+    
+    function updateScalingChart() {
+        const ctx = document.getElementById('scalingChart').getContext('2d');
+        if (charts.scaling) charts.scaling.destroy();
+        charts.scaling = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                datasets: [{
+                    label: 'Z-Score',
+                    data: [0.61, -0.92, 1.53, -1.84, 0.61],
+                    backgroundColor: (context) => {
+                        return context.parsed.y > 0 ? '#27ae60' : '#e74c3c';
+                    }
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true } },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Domain Features
+    let domainApplied = false;
+    function applyDomainFeatures() {
+        if (domainApplied) return;
+        const table = document.getElementById('domainTable');
+        const header = table.rows[0];
+        
+        ['WOR', 'GOR', 'Total Liquid'].forEach(h => {
+            const th = document.createElement('th');
+            th.innerText = h;
+            header.appendChild(th);
+        });
+        
+        for (let i = 1; i < table.rows.length; i++) {
+            const oil = parseInt(table.rows[i].cells[1].innerText.replace(/,/g, ''));
+            const water = parseInt(table.rows[i].cells[2].innerText.replace(/,/g, ''));
+            const gas = parseFloat(table.rows[i].cells[3].innerText);
+            
+            const wor = (water / oil).toFixed(2);
+            const gor = (gas / (oil/1000)).toFixed(2);
+            const total = oil + water;
+            
+            [wor, gor, total].forEach(val => {
+                const td = document.createElement('td');
+                td.innerText = val;
+                td.classList.add('info-highlight');
+                table.rows[i].appendChild(td);
+            });
+        }
+        
+        updateDomainChart();
+        domainApplied = true;
+    }
+    
+    function resetDomainFeatures() {
+        const table = document.getElementById('domainTable');
+        while (table.rows[0].cells.length > 4) {
+            table.rows[0].deleteCell(-1);
+        }
+        for (let i = 1; i < table.rows.length; i++) {
+            while (table.rows[i].cells.length > 4) {
+                table.rows[i].deleteCell(-1);
+            }
+        }
+        initDomainChart();
+        domainApplied = false;
+    }
+    
+    function initDomainChart() {
+        const ctx = document.getElementById('domainChart').getContext('2d');
+        if (charts.domain) charts.domain.destroy();
+        charts.domain = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Month 1', 'Month 2', 'Month 3', 'Month 4'],
+                datasets: [{
+                    label: 'Oil Production (bbl/d)',
+                    data: [5000, 4800, 4500, 4200],
+                    borderColor: '#d4541c',
+                    backgroundColor: 'rgba(212, 84, 28, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true } }
+            }
+        });
+    }
+    
+    function updateDomainChart() {
+        const ctx = document.getElementById('domainChart').getContext('2d');
+        if (charts.domain) charts.domain.destroy();
+        charts.domain = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Month 1', 'Month 2', 'Month 3', 'Month 4'],
+                datasets: [
+                    {
+                        label: 'WOR (Water-Oil Ratio)',
+                        data: [0.10, 0.13, 0.17, 0.21],
+                        borderColor: '#e74c3c',
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'GOR (Gas-Oil Ratio)',
+                        data: [2.5, 2.54, 2.62, 2.69],
+                        borderColor: '#27ae60',
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'WOR' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'GOR' },
+                        grid: { drawOnChartArea: false }
+                    }
+                },
+                plugins: { legend: { display: true } }
+            }
+        });
+    }
+
+    // Initialize all charts on load
+    window.addEventListener('load', () => {
+        initLagChart();
+        initRollingChart();
+        initNormChart();
+        initScalingChart();
+        initDomainChart();
+    });
+</script>
+</body>
+</html>
